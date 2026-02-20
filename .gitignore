@@ -1,0 +1,36 @@
+# Gradle
+# Ignore Gradle cache
+.gradle/
+# Ignore all build directories
+**/build/
+
+# IntelliJ IDEA
+# Ignore IDE project files
+.idea/
+**/*.iml
+*.iws
+# Ignore IDE output directories
+**/out/
+
+# VS Code
+.vscode/
+
+# Build artifacts
+# These are typically generated into the build directory,
+# but this provides an extra layer of protection.
+*.jar
+*.war
+*.ear
+
+# Log files
+*.log
+
+# JVM crash logs
+hs_err_pid*
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Keep the Gradle wrapper
+!gradle/wrapper/gradle-wrapper.jar

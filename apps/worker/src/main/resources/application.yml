@@ -1,0 +1,9 @@
+spring:
+  output:
+    ansi:
+      enabled=ALWAYS:
+  application:
+    name: loglens-worker
+
+server:
+  port: 8081
