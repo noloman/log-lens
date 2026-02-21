@@ -1,4 +1,4 @@
-package me.manulorenzo.api.error
+package me.manulorenzo.loglens.api.error
 
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
