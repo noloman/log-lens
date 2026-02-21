@@ -17,6 +17,7 @@ dependencies {
     implementation(libs.kotlin.reflect)
 
     testImplementation(libs.spring.boot.starter.test)
+    testImplementation("com.tngtech.archunit:archunit-junit4:1.4.1")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
