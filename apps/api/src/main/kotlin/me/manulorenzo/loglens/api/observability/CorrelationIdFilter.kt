@@ -1,4 +1,4 @@
-package me.manulorenzo.api.observability
+package me.manulorenzo.loglens.api.observability
 
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
