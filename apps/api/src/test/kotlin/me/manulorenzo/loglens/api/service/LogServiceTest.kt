@@ -8,6 +8,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyList
 import org.mockito.InjectMocks
@@ -31,20 +32,23 @@ class LogServiceTest {
     lateinit var logService: LogService
 
     @Test
-    fun `createLog should save log and chunks`() {
+    fun `createLog should associate chunks and save parent log`() {
         val filename = "test.log"
         val userId = UUID.randomUUID()
         val chunks = listOf("chunk1", "chunk2")
-        val logEntity = LogEntity(fileName = filename, userId = userId, uploadedAt = Instant.now())
+        val logCaptor = ArgumentCaptor.forClass(LogEntity::class.java)
 
-        `when`(logRepository.save(any(LogEntity::class.java))).thenReturn(logEntity)
-        `when`(logRepository.saveAll(anyList())).thenReturn(emptyList<LogEntity>())
+        `when`(logRepository.save(logCaptor.capture())).thenAnswer { it.getArgument(0) }
 
         val result = logService.createLog(filename, userId, chunks)
 
-        assertThat(result).isEqualTo(logEntity)
+        assertThat(result.fileName).isEqualTo(filename)
+        assertThat(result.userId).isEqualTo(userId)
         verify(logRepository).save(any(LogEntity::class.java))
-        verify(logRepository).saveAll(anyList())
+
+        val capturedLog = logCaptor.value
+        assertThat(capturedLog.chunks).hasSize(2)
+        assertThat(capturedLog.chunks.map { it.content }).containsExactlyInAnyOrder("chunk1", "chunk2")
     }
 
     @Test

@@ -23,18 +23,13 @@ class LogService(
         userId: UUID,
         chunks: List<String>,
     ): LogEntity {
-        val log = LogEntity(fileName = filename, userId = userId, uploadedAt = Instant.now())
-        val savedLog = logRepository.save(log)
-        val logEntityList =
-            chunks.map {
-                LogEntity(
-                    fileName = filename,
-                    userId = userId,
-                    uploadedAt = Instant.now(),
-                )
-            }
-        logRepository.saveAll(logEntityList)
-        return savedLog
+        val log =
+            LogEntity(fileName = filename, userId = userId, uploadedAt = Instant.now())
+        val chunkEntities = chunks.map { content ->
+            LogChunkEntity(content = content, log = log)
+        }
+        log.chunks.addAll(chunkEntities)
+        return logRepository.save(log)
     }
 
     /**
