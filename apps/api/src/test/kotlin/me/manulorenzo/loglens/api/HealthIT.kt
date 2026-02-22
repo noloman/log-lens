@@ -1,21 +1,23 @@
 package me.manulorenzo.loglens.api
 
-import org.junit.jupiter.api.Assertions
+import me.manulorenzo.loglens.api.controller.HealthController
 import org.junit.jupiter.api.Test
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.server.LocalServerPort
-import org.springframework.http.HttpStatus
-import org.springframework.web.client.RestTemplate
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
+import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@WebMvcTest(HealthController::class)
 class HealthIT(
-    @LocalServerPort val port: Int,
+    @Autowired val mockMvc: MockMvc,
 ) {
-    private val client = RestTemplate()
-
     @Test
     fun `health endpoint returns 200`() {
-        val response = client.getForEntity("http://localhost:$port/health", String::class.java)
-        Assertions.assertEquals(HttpStatus.OK, response.statusCode)
+        mockMvc
+            .perform(get("/health"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.status").value("ok"))
     }
 }

@@ -1,4 +1,4 @@
-package me.manulorenzo.worker
+package me.manulorenzo.loglens.worker
 
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test

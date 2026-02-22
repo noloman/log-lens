@@ -3,6 +3,7 @@ kotlin = "2.3.0"
 springBoot = "3.2.2"
 springDependencyManagement = "1.1.4"
 junitJupiter = "5.10.0"
+testContainers = "1.21.0"
 
 [libraries]
 # Kotlin
@@ -15,7 +16,11 @@ spring-boot-starter-validation = { module = "org.springframework.boot:spring-boo
 spring-boot-starter-actuator = { module = "org.springframework.boot:spring-boot-starter-actuator" }
 spring-boot-starter-data-jpa = { module = "org.springframework.boot:spring-boot-starter-data-jpa" }
 spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
-
+testcontainers-bom = { module = "org.testcontainers:testcontainers-bom", version.ref = "testContainers" }
+testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testContainers" }
+testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testContainers" }
+testcontainers-junit-jupiter = { module = "org.testcontainers:junit-jupiter", version.ref = "testContainers" }
+postgresql = { module = "org.postgresql:postgresql" }
 # Jackson
 jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin" }
 

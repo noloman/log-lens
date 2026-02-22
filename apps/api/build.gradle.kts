@@ -18,9 +18,14 @@ dependencies {
     implementation(libs.spring.boot.starter.data.jpa)
     implementation(libs.jackson.module.kotlin)
     implementation(libs.kotlin.reflect)
+    runtimeOnly(libs.postgresql)
 
     testImplementation(libs.spring.boot.starter.test)
     testImplementation("com.tngtech.archunit:archunit-junit4:1.4.1")
+    testImplementation(platform(libs.testcontainers.bom))
+    testImplementation(libs.testcontainers)
+    testImplementation(libs.testcontainers.junit.jupiter)
+    testImplementation(libs.testcontainers.postgresql)
 }
 
 noArg {
