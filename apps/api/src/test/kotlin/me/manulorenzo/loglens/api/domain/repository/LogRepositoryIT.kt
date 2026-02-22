@@ -1,8 +1,7 @@
-package me.manulorenzo.loglens.api
+package me.manulorenzo.loglens.api.domain.repository
 
 import me.manulorenzo.loglens.api.domain.entity.LogEntity
-import me.manulorenzo.loglens.api.domain.repository.LogRepository
-import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
@@ -46,6 +45,6 @@ class LogRepositoryIT {
             )
 
         val savedLog = logRepository.save(log)
-        assertThat(savedLog.id).isNotNull()
+        Assertions.assertThat(savedLog.id).isNotNull()
     }
 }
