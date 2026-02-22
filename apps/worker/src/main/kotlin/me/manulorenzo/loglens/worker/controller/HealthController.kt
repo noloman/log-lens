@@ -1,4 +1,4 @@
-package me.manulorenzo.worker.controller
+package me.manulorenzo.loglens.worker.controller
 
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController

@@ -1,4 +1,4 @@
-package me.manulorenzo.worker
+package me.manulorenzo.loglens.worker
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
