@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     id("loglens.kotlin-jvm")
     alias(libs.plugins.kotlin.spring)
@@ -12,10 +14,14 @@ version = "0.0.1-SNAPSHOT"
 dependencies {
     implementation(project(":libs:common"))
 
+    implementation(libs.spring.boot.starter.security)
     implementation(libs.spring.boot.starter.web)
     implementation(libs.spring.boot.starter.validation)
     implementation(libs.spring.boot.starter.actuator)
     implementation(libs.spring.boot.starter.data.jpa)
+    implementation(libs.jjwt.api)
+    runtimeOnly(libs.jjwt.impl)
+    runtimeOnly(libs.jjwt.jackson)
     implementation(libs.jackson.module.kotlin)
     implementation(libs.kotlin.reflect)
     runtimeOnly(libs.postgresql)
@@ -32,8 +38,8 @@ noArg {
     annotation("jakarta.persistence.Entity")
 }
 
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    compilerOptions {
-        freeCompilerArgs.add("-Xjsr305=strict")
-    }
+val compileKotlin: KotlinCompile by tasks
+compileKotlin.compilerOptions {
+    freeCompilerArgs.add("-Xjsr305=strict")
+    freeCompilerArgs.set(listOf("-Xannotation-default-target=param-property"))
 }
