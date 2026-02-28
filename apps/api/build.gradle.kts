@@ -27,11 +27,12 @@ dependencies {
     runtimeOnly(libs.postgresql)
 
     testImplementation(libs.spring.boot.starter.test)
-    testImplementation("com.tngtech.archunit:archunit-junit4:1.4.1")
+    testImplementation(libs.archunit.junit4)
     testImplementation(platform(libs.testcontainers.bom))
     testImplementation(libs.testcontainers)
     testImplementation(libs.testcontainers.junit.jupiter)
     testImplementation(libs.testcontainers.postgresql)
+    implementation(libs.springdoc.openapi.starter.webmvc.ui)
 }
 
 noArg {

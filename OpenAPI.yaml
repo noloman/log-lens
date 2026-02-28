@@ -1,0 +1,128 @@
+openapi: 3.0.3
+info:
+  title: LogLens API
+  description: API for LogLens application
+  version: 0.0.1
+servers:
+  - url: http://localhost:8080
+    description: Local server
+paths:
+  /health:
+    get:
+      summary: Health check
+      description: Returns the health status of the service
+      operationId: health
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+  /auth/login:
+    post:
+      summary: Login
+      description: Authenticate a user and return access and refresh tokens
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Unauthorized
+  /auth/register:
+    post:
+      summary: Register
+      description: Register a new user
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRequest'
+      responses:
+        '201':
+          description: User registered successfully
+        '400':
+          description: Bad request
+  /auth/refresh:
+    post:
+      summary: Refresh token
+      description: Refresh an expired access token using a refresh token
+      operationId: refresh
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Unauthorized
+components:
+  schemas:
+    AuthRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          description: User email address
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          description: User password
+          example: password123
+      required:
+        - email
+        - password
+    RefreshRequest:
+      type: object
+      properties:
+        refreshToken:
+          type: string
+          format: uuid
+          description: Refresh token UUID
+      required:
+        - refreshToken
+    TokenResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: Access token JWT
+        refreshToken:
+          type: string
+          description: Refresh token UUID
+      required:
+        - accessToken
+        - refreshToken
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: ok
+        service:
+          type: string
+          example: loglens-api
+      required:
+        - status
+        - service

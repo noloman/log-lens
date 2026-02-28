@@ -5,6 +5,9 @@ springDependencyManagement = "1.1.4"
 junitJupiter = "5.10.0"
 testContainers = "1.21.0"
 jjwt = "0.12.6"
+archunit = "1.4.1"
+springdoc = "2.5.0"
+jacksonKotlin = "2.15.2"
 
 [libraries]
 # Kotlin
@@ -27,11 +30,15 @@ jjwt-api = { module = "io.jsonwebtoken:jjwt-api", version.ref = "jjwt" }
 jjwt-impl = { module = "io.jsonwebtoken:jjwt-impl", version.ref = "jjwt" }
 jjwt-jackson = { module = "io.jsonwebtoken:jjwt-jackson", version.ref = "jjwt" }
 # Jackson
-jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin" }
+jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jacksonKotlin" }
 
 # Testing
 junit-bom = { module = "org.junit:junit-bom", version.ref = "junitJupiter" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+archunit-junit4 = { module = "com.tngtech.archunit:archunit-junit4", version.ref = "archunit" }
+
+# Documentation
+springdoc-openapi-starter-webmvc-ui = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
