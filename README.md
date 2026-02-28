@@ -11,6 +11,23 @@ The project follows a clean, layered architecture as defined in [ADR 0001](docs/
 
 This structure is enforced by **ArchUnit** tests to ensure architectural compliance and maintain clear boundaries between components. Our persistence strategy, detailed in [ADR 0002](docs/adr/0002-jpa-strategy.md), defaults to lazy loading and uses optimistic locking to manage concurrency.
 
+## Security Model
+LogLens uses **JWT access tokens + opaque refresh tokens** for stateless authentication, as described in [ADR 0003](docs/adr/0003-auth-strategy.md).
+
+- **Access tokens**: HMAC-SHA signed JWTs (1 h TTL) carrying user ID, email, and role
+- **Refresh tokens**: Random UUIDs (30 d TTL) stored server-side in PostgreSQL
+- **Password storage**: BCrypt (adaptive cost, default 10 rounds)
+- **Authorization**: Role-based — `USER` and `ADMIN` roles enforced by Spring Security filter chain
+
+| Endpoint | Access |
+|---|---|
+| `POST /auth/register`, `/auth/login`, `/auth/refresh` | Public |
+| `GET /health` | Public |
+| `/admin/**` | ADMIN only |
+| Everything else | Authenticated |
+
+For threat analysis and open issues, see [docs/security/threat-model.md](docs/security/threat-model.md).
+
 ## Features
 - **Transactional Log Ingestion**: Create logs and their associated chunks in a single, atomic transaction.
 - **N+1 Problem Demonstration & Solution**: The `LogService` includes both a naive (`getLogWithChunksNaive`) and an optimized (`getLogWithChunksOptimized`) method to demonstrate and solve the N+1 query problem.
