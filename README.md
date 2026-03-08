@@ -21,15 +21,32 @@ LogLens uses **JWT access tokens + opaque refresh tokens** for stateless authent
 
 | Endpoint | Access |
 |---|---|
-| `POST /auth/register`, `/auth/login`, `/auth/refresh` | Public |
+| `POST /v1/auth/register`, `/v1/auth/login`, `/v1/auth/refresh` | Public |
 | `GET /health` | Public |
-| `/admin/**` | ADMIN only |
+| `/v1/admin/**` | ADMIN only |
 | Everything else | Authenticated |
 
 For threat analysis and open issues, see [docs/security/threat-model.md](docs/security/threat-model.md).
 
+## API Design
+All endpoints are versioned under `/v1/` as defined in [ADR 0004](docs/adr/0004-versioning-strategy.md).
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/v1/auth/register` | Register a new user |
+| `POST` | `/v1/auth/login` | Authenticate and receive tokens |
+| `POST` | `/v1/auth/refresh` | Refresh an expired access token |
+| `POST` | `/v1/logs` | Ingest a structured log entry |
+| `GET` | `/v1/logs` | List log entries (optional `?serviceName=` filter) |
+| `GET` | `/health` | Health check (unversioned) |
+
+The full API contract is documented in the [OpenAPI specification](OpenAPI.yaml). When running locally, the interactive Swagger UI is available at [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html).
+
+For our deprecation policy and version lifecycle, see [docs/api/deprecation-plan.md](docs/api/deprecation-plan.md).
+
 ## Features
-- **Transactional Log Ingestion**: Create logs and their associated chunks in a single, atomic transaction.
+- **Structured Log Ingestion**: `POST /v1/logs` accepts structured log entries (service name, level, message) and stores them in the `log_entries` table. `GET /v1/logs` retrieves entries with optional `?serviceName=` filtering.
+- **File-based Log Ingestion**: Upload entire log files that are chunked and stored atomically via `LogService`.
 - **N+1 Problem Demonstration & Solution**: The `LogService` includes both a naive (`getLogWithChunksNaive`) and an optimized (`getLogWithChunksOptimized`) method to demonstrate and solve the N+1 query problem.
 - **Performance Testing**: Integration tests measure the exact number of SQL statements to verify the performance of different fetching strategies.
 

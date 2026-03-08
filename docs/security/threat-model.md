@@ -12,7 +12,8 @@ This document covers the **API module** (`apps/api`) of LogLens, focusing on aut
 | JWT signing secret | Critical | `JWT_SECRET` env var, injected via `application.yml` |
 | Access tokens (JWT) | High | Client-side (Authorization header) |
 | Refresh tokens (UUID) | High | `refresh_tokens` table, client receives opaque UUID |
-| Log data | Medium | `logs` / `log_chunks` tables |
+| Log data (file uploads) | Medium | `logs` / `log_chunks` tables |
+| Log data (structured entries) | Medium | `log_entries` table |
 
 ## Trust Boundaries
 
@@ -46,8 +47,9 @@ This document covers the **API module** (`apps/api`) of LogLens, focusing on aut
 | Threat | Current Mitigation | Residual Risk |
 |---|---|---|
 | **T-1**: Modify JWT payload to escalate role | HMAC signature verification rejects any modifications | None while key is kept secret |
-| **T-2**: SQL injection through auth endpoints | Spring Data JPA uses parameterized queries exclusively | None for current query patterns |
+| **T-2**: SQL injection through auth or log endpoints | Spring Data JPA uses parameterized queries exclusively (including `LogEntryRepository.findByServiceName`) | None for current query patterns |
 | **T-3**: Modify refresh token UUID to access another user's session | Refresh tokens are random UUIDs (122 bits of entropy), looked up by exact match | Negligible collision probability |
+| **T-4**: Inject malicious content via log entry fields (`serviceName`, `level`, `message`) | Fields are stored as plain strings via JPA parameterized inserts — no injection at the DB level | If log data is rendered in a UI without escaping, stored XSS is possible |
 
 ### 3. Repudiation
 
@@ -60,6 +62,7 @@ This document covers the **API module** (`apps/api`) of LogLens, focusing on aut
 | Threat | Current Mitigation | Residual Risk |
 |---|---|---|
 | **I-1**: Credential leak via error responses | `GlobalExceptionHandler` returns generic messages; password hashes are never serialized | Generic `Exception` handler exposes `ex.message` which may leak internal details |
+| **I-4**: Unauthorized access to log entries via `GET /logs` | Endpoint requires authentication (JWT); unauthenticated requests are rejected by the security filter chain | No tenant/ownership isolation — any authenticated user can read all log entries |
 | **I-2**: JWT secret exposure | Secret is injected via environment variable, not hardcoded in production | Default fallback value in `application.yml` could be deployed accidentally |
 | **I-3**: Timing attack on password comparison | BCrypt's `matches()` is constant-time by design | None |
 
@@ -70,6 +73,7 @@ This document covers the **API module** (`apps/api`) of LogLens, focusing on aut
 | **D-1**: Flood `/auth/register` to fill the `users` table | None | No rate limiting; attacker can create unlimited accounts |
 | **D-2**: Flood `/auth/login` with invalid credentials | BCrypt is intentionally slow, which amplifies CPU load under attack | No rate limiting — high request volume could exhaust server threads |
 | **D-3**: Accumulate refresh tokens by repeated logins | No token-per-user limit | `refresh_tokens` table grows unbounded per user |
+| **D-4**: Flood `POST /logs` to fill the `log_entries` table | Endpoint requires authentication | No rate limiting or payload size limit — an authenticated user can insert unbounded rows |
 
 ### 6. Elevation of Privilege
 
@@ -89,3 +93,7 @@ This document covers the **API module** (`apps/api`) of LogLens, focusing on aut
 | 5 | No per-user limit on active refresh tokens | Low | Cap active tokens per user and delete oldest on overflow |
 | 6 | Default JWT secret fallback in `application.yml` | Low | Fail startup if `JWT_SECRET` env var is missing (remove default) |
 | 7 | HTTPS not enforced at the application level | Low | Enforce via reverse proxy or Spring's `requiresSecure()` |
+| 8 | No tenant isolation on log entries | Medium | Filter `GET /logs` by the authenticated user's ID; add a `userId` column to `log_entries` |
+| 9 | No input validation on log level values | Low | Validate `level` against an enum allowlist (e.g., TRACE, DEBUG, INFO, WARN, ERROR) |
+| 10 | No rate limiting on `POST /logs` | Medium | Apply per-user rate limiting to the ingestion endpoint |
+| 11 | Stored XSS risk if log entries are rendered in a UI | Low | Sanitize or escape log entry fields before rendering |
