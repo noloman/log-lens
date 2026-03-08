@@ -66,7 +66,7 @@ class SecurityIT {
     fun `should return 403 when accessing a secured endpoint without authentication`() {
         // Using try-catch because RestTemplate throws exception on 4xx/5xx
         try {
-            client.getForEntity("http://localhost:$port/api/logs", String::class.java)
+            client.getForEntity("http://localhost:$port/v1/logs", String::class.java)
         } catch (e: org.springframework.web.client.HttpClientErrorException) {
             assertEquals(HttpStatus.FORBIDDEN, e.statusCode)
         }
@@ -76,12 +76,12 @@ class SecurityIT {
     fun `protected endpoint returns 200 with a valid token`() {
         // 1. Register a user
         val registerRequest = mapOf("email" to "email@test.com", "password" to "password")
-        val registerResponse = client.postForEntity("http://localhost:$port/auth/register", registerRequest, String::class.java)
+        val registerResponse = client.postForEntity("http://localhost:$port/v1/auth/register", registerRequest, String::class.java)
         assertEquals(HttpStatus.CREATED, registerResponse.statusCode)
 
         // 2. Login to get a token
         val loginRequest = mapOf("email" to "email@test.com", "password" to "password")
-        val loginResponse = client.postForEntity("http://localhost:$port/auth/login", loginRequest, Map::class.java)
+        val loginResponse = client.postForEntity("http://localhost:$port/v1/auth/login", loginRequest, Map::class.java)
         assertEquals(HttpStatus.OK, loginResponse.statusCode)
 
         val body = loginResponse.body as Map<*, *>
@@ -92,10 +92,10 @@ class SecurityIT {
         headers.setBearerAuth(token)
         val request = HttpEntity<Void>(headers)
 
-        // We expect 404 because /api/logs might not exist, but we want to ensure it's NOT 401.
+        // We want to ensure authentication passed (i.e. NOT 401/403).
         // If it returns 404, it means we passed authentication.
         try {
-            val response = client.exchange("http://localhost:$port/api/logs", HttpMethod.GET, request, String::class.java)
+            val response = client.exchange("http://localhost:$port/v1/logs", HttpMethod.GET, request, String::class.java)
             assertNotEquals(HttpStatus.UNAUTHORIZED, response.statusCode)
         } catch (e: org.springframework.web.client.HttpClientErrorException) {
             assertNotEquals(HttpStatus.UNAUTHORIZED, e.statusCode)

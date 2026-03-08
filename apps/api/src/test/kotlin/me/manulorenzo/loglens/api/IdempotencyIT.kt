@@ -55,12 +55,12 @@ class IdempotencyIT {
         val requestEntity = HttpEntity(registerRequest, headers)
 
         // First request
-        val firstResponse = client.exchange("http://localhost:$port/auth/register", HttpMethod.POST, requestEntity, String::class.java)
+        val firstResponse = client.exchange("http://localhost:$port/v1/auth/register", HttpMethod.POST, requestEntity, String::class.java)
         assertEquals(HttpStatus.CREATED, firstResponse.statusCode)
         assertEquals(1, userRepository.count())
 
         // Second request with the same idempotency key
-        val secondResponse = client.exchange("http://localhost:$port/auth/register", HttpMethod.POST, requestEntity, String::class.java)
+        val secondResponse = client.exchange("http://localhost:$port/v1/auth/register", HttpMethod.POST, requestEntity, String::class.java)
         assertEquals(HttpStatus.CREATED, secondResponse.statusCode)
         assertEquals(firstResponse.body, secondResponse.body)
 

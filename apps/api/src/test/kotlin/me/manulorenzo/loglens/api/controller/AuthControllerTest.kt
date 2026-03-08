@@ -29,6 +29,10 @@ import java.util.*
             type = FilterType.ASSIGNABLE_TYPE,
             classes = [me.manulorenzo.loglens.api.config.JwtAuthenticationFilter::class],
         ),
+        ComponentScan.Filter(
+            type = FilterType.ASSIGNABLE_TYPE,
+            classes = [me.manulorenzo.loglens.api.config.IdempotencyFilter::class],
+        ),
     ],
 )
 @AutoConfigureMockMvc(addFilters = false)
@@ -49,7 +53,7 @@ class AuthControllerTest {
         )
         mockMvc
             .perform(
-                post("/auth/login")
+                post("/v1/auth/login")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""{"email": "user", "password": "password"}"""),
             ).andExpect(status().isOk)
@@ -61,7 +65,7 @@ class AuthControllerTest {
     fun `should return 201 Created for register`() {
         mockMvc
             .perform(
-                post("/auth/register")
+                post("/v1/auth/register")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""{"email": "user", "password": "password"}"""),
             ).andExpect(status().isCreated)
@@ -78,7 +82,7 @@ class AuthControllerTest {
         )
         mockMvc
             .perform(
-                post("/auth/refresh")
+                post("/v1/auth/refresh")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""{"refreshToken": "$uuid"}"""),
             ).andExpect(status().isOk)
