@@ -23,9 +23,9 @@ class SecurityConfig(
             .csrf { it.disable() }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests {
-                it.requestMatchers("/auth/**").permitAll()
+                it.requestMatchers("/v1/auth/**").permitAll()
                 it.requestMatchers("/health").permitAll()
-                it.requestMatchers("/admin/**").hasRole(Role.ADMIN.name)
+                it.requestMatchers("/v1/admin/**").hasRole(Role.ADMIN.name)
                 it.anyRequest().authenticated()
             }
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
