@@ -19,20 +19,22 @@ dependencies {
     implementation(libs.spring.boot.starter.validation)
     implementation(libs.spring.boot.starter.actuator)
     implementation(libs.spring.boot.starter.data.jpa)
+    implementation(libs.spring.boot.starter.data.redis)
     implementation(libs.jjwt.api)
-    runtimeOnly(libs.jjwt.impl)
-    runtimeOnly(libs.jjwt.jackson)
+    implementation(libs.springdoc.openapi.starter.webmvc.ui)
     implementation(libs.jackson.module.kotlin)
     implementation(libs.kotlin.reflect)
+
+    runtimeOnly(libs.jjwt.impl)
+    runtimeOnly(libs.jjwt.jackson)
     runtimeOnly(libs.postgresql)
 
     testImplementation(libs.spring.boot.starter.test)
     testImplementation(libs.archunit.junit4)
-    testImplementation(platform(libs.testcontainers.bom))
     testImplementation(libs.testcontainers)
     testImplementation(libs.testcontainers.junit.jupiter)
     testImplementation(libs.testcontainers.postgresql)
-    implementation(libs.springdoc.openapi.starter.webmvc.ui)
+    testImplementation(kotlin("test"))
 }
 
 noArg {

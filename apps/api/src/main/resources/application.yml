@@ -6,6 +6,10 @@ spring:
       enabled: ALWAYS
   application:
     name: loglens-api
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: 6379
 
 server:
   port: 8080
