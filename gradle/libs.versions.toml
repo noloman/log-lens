@@ -3,11 +3,11 @@ kotlin = "2.3.0"
 springBoot = "3.2.2"
 springDependencyManagement = "1.1.4"
 junitJupiter = "5.10.0"
-testContainers = "1.21.0"
 jjwt = "0.12.6"
 archunit = "1.4.1"
 springdoc = "2.5.0"
 jacksonKotlin = "2.15.2"
+bucket4j = "8.16.1"
 
 [libraries]
 # Kotlin
@@ -26,6 +26,7 @@ spring-boot-starter-data-redis = { module = "org.springframework.boot:spring-boo
 testcontainers = { module = "org.testcontainers:testcontainers" }
 testcontainers-postgresql = { module = "org.testcontainers:postgresql" }
 testcontainers-junit-jupiter = { module = "org.testcontainers:junit-jupiter" }
+bucket4j-core = { module = "com.bucket4j:bucket4j_jdk17-core", version.ref = "bucket4j" }
 postgresql = { module = "org.postgresql:postgresql" }
 jjwt-api = { module = "io.jsonwebtoken:jjwt-api", version.ref = "jjwt" }
 jjwt-impl = { module = "io.jsonwebtoken:jjwt-impl", version.ref = "jjwt" }

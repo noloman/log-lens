@@ -24,7 +24,7 @@ dependencies {
     implementation(libs.springdoc.openapi.starter.webmvc.ui)
     implementation(libs.jackson.module.kotlin)
     implementation(libs.kotlin.reflect)
-
+    implementation(libs.bucket4j.core)
     runtimeOnly(libs.jjwt.impl)
     runtimeOnly(libs.jjwt.jackson)
     runtimeOnly(libs.postgresql)
