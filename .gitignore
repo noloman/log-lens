@@ -1,12 +1,18 @@
 # Gradle
 .gradle/
 **/build/
+build/
 
 # IntelliJ IDEA
 .idea/
 **/*.iml
 *.iws
 **/out/
+out/
+
+# Kotlin
+.kotlin/
+*.kotlin_module
 
 # VS Code
 .vscode/
@@ -19,9 +25,11 @@
 
 # Log files
 *.log
+logs/
 
 # JVM crash logs
 hs_err_pid*
+replay_pid*
 
 # OS-specific files
 .DS_Store
