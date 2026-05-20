@@ -40,7 +40,7 @@ All endpoints are versioned under `/v1/` as defined in [ADR 0004](docs/adr/0004-
 | `GET` | `/v1/logs` | List log entries (optional `?serviceName=` filter) |
 | `GET` | `/health` | Health check (unversioned) |
 
-The full API contract is documented in the [OpenAPI specification](OpenAPI.yaml). When running locally, the interactive Swagger UI is available at [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html).
+The full API contract is documented in the [OpenAPI specification](openapi.yaml). When running locally, the interactive Swagger UI is available at [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html).
 
 For our deprecation policy and version lifecycle, see [docs/api/deprecation-plan.md](docs/api/deprecation-plan.md).
 
@@ -56,6 +56,9 @@ For our deprecation policy and version lifecycle, see [docs/api/deprecation-plan
 - **Testing**: JUnit 5, Mockito, Testcontainers, ArchUnit
 - (Planned) Kafka, Redis, AWS ECS/EKS, Terraform, pgvector, OpenTelemetry
 
+## Roadmap
+The product and learning roadmap is tracked in [docs/roadmap/product-learning-roadmap.md](docs/roadmap/product-learning-roadmap.md). Use it as the source of truth for weekly deliverables, quality gates, and suggested product improvements.
+
 ## Local Development
 ### Requirements
 - Docker
@@ -64,3 +67,4 @@ For our deprecation policy and version lifecycle, see [docs/api/deprecation-plan
 The local environment, including the API, worker, and PostgreSQL database, is managed by Docker Compose. Health checks are configured to ensure services start in the correct order.
 ```bash
 docker compose -f deploy/docker/docker-compose.local.yml up
+```
