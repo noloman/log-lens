@@ -53,8 +53,9 @@ We use **JWT access tokens + opaque refresh tokens** with the following design:
 - BCrypt via Spring Security's `BCryptPasswordEncoder` (adaptive cost factor, default 10 rounds)
 
 ### Key Management
-- The HMAC signing secret is injected from the `JWT_SECRET` environment variable (`application.yml` provides a development-only fallback)
-- Minimum key length: 32 bytes (enforced by JJWT's `Keys.hmacShaKeyFor`)
+- The HMAC signing secret is injected from the `JWT_SECRET` environment variable. The application fails startup if the variable is missing.
+- Minimum key length: 32 bytes, validated by `JwtService` before tokens are issued.
+- Placeholder values containing `change-me` are rejected.
 
 ## Consequences
 

@@ -62,9 +62,11 @@ The product and learning roadmap is tracked in [docs/roadmap/product-learning-ro
 ## Local Development
 ### Requirements
 - Docker
+- `JWT_SECRET` environment variable with at least 32 bytes. Use a local-only value; never commit or reuse production secrets.
 
 ### Run Dependencies
 The local environment, including the API, worker, and PostgreSQL database, is managed by Docker Compose. Health checks are configured to ensure services start in the correct order.
 ```bash
+export JWT_SECRET='local-development-jwt-secret-at-least-32-bytes'
 docker compose -f deploy/docker/docker-compose.local.yml up
 ```

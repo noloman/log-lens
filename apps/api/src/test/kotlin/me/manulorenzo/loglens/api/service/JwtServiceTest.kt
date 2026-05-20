@@ -6,6 +6,7 @@ import me.manulorenzo.loglens.api.domain.entity.UserEntity
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -85,5 +86,25 @@ class JwtServiceTest {
         assertThrows(io.jsonwebtoken.ExpiredJwtException::class.java) {
             jwtService.validateToken(token)
         }
+    }
+
+    @Test
+    fun `should reject short signing secret`() {
+        val exception =
+            assertThrows(IllegalArgumentException::class.java) {
+                JwtService("too-short", 3600000)
+            }
+
+        assertTrue(exception.message!!.contains("at least 32 bytes"))
+    }
+
+    @Test
+    fun `should reject placeholder signing secret`() {
+        val exception =
+            assertThrows(IllegalArgumentException::class.java) {
+                JwtService("change-me-in-production-must-be-at-least-32-bytes-long!!", 3600000)
+            }
+
+        assertTrue(exception.message!!.contains("placeholder"))
     }
 }

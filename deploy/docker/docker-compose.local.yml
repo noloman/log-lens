@@ -11,6 +11,7 @@ services:
     environment:
       DATABASE_URL: postgresql://loglens:loglens@db:5432/loglens
       SPRING_DATA_REDIS_HOST: redis
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET to a local development value with at least 32 bytes}
     depends_on:
       db:
         condition: service_healthy

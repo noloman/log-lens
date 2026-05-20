@@ -68,7 +68,7 @@ This document covers the **API module** (`apps/api`) of LogLens, focusing on aut
 |---|---|---|
 | **I-1**: Credential leak via error responses | `GlobalExceptionHandler` returns generic messages; password hashes are never serialized | Generic `Exception` handler exposes `ex.message` which may leak internal details |
 | **I-4**: Unauthorized access to log entries via `GET /logs` or `GET /logs/{id}` | Endpoints require authentication (JWT); unauthenticated requests are rejected by the security filter chain | No tenant/ownership isolation — any authenticated user can read all log entries. Cached responses in Redis contain full `LogResponse` JSON including type metadata |
-| **I-2**: JWT secret exposure | Secret is injected via environment variable, not hardcoded in production | Default fallback value in `application.yml` could be deployed accidentally |
+| **I-2**: JWT secret exposure | Secret is injected via required environment variable, not hardcoded in production. `JwtService` rejects short and placeholder values | Secret exposure through deployment logs, shell history, or compromised runtime environment |
 | **I-3**: Timing attack on password comparison | BCrypt's `matches()` is constant-time by design | None |
 
 ### 5. Denial of Service
@@ -94,6 +94,7 @@ This document covers the **API module** (`apps/api`) of LogLens, focusing on aut
 |---|---|---|
 | 1 | No rate limiting on auth endpoints | `RateLimitFilter` (Bucket4j) applies 100 req/min per IP to all endpoints including `/v1/auth/**` |
 | 10 | No rate limiting on `POST /logs` | Covered by the same global `RateLimitFilter` |
+| 6 | Default JWT secret fallback in `application.yml` | Removed the fallback; `JWT_SECRET` is required and placeholder values are rejected |
 
 ## Open Issues (Ordered by Priority)
 
@@ -109,7 +110,6 @@ This document covers the **API module** (`apps/api`) of LogLens, focusing on aut
 | 15 | Rate limiting is per-IP, not per-user | Medium | Add user-based rate limiting (from JWT `sub` claim) for authenticated endpoints; IP-based limits are unfair for shared IPs and ineffective against distributed attacks |
 | 16 | Rate limiting is in-memory, not distributed | Medium | If running multiple API replicas, switch `ConcurrentHashMap` to Bucket4j's Redis proxy (`bucket4j_jdk17-lettuce`) so rate limits are shared across instances |
 | 5 | No per-user limit on active refresh tokens | Low | Cap active tokens per user and delete oldest on overflow |
-| 6 | Default JWT secret fallback in `application.yml` | Low | Fail startup if `JWT_SECRET` env var is missing (remove default) |
 | 7 | HTTPS not enforced at the application level | Low | Enforce via reverse proxy or Spring's `requiresSecure()` |
 | 9 | No input validation on log level values | Low | Validate `level` against an enum allowlist (e.g., TRACE, DEBUG, INFO, WARN, ERROR) |
 | 11 | Stored XSS risk if log entries are rendered in a UI | Low | Sanitize or escape log entry fields before rendering |

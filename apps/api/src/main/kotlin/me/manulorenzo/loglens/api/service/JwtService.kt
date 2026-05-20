@@ -14,7 +14,16 @@ class JwtService(
     @Value("\${jwt.secret}") private val secret: String,
     @Value("\${jwt.expiration-ms:3600000}") private val expirationMs: Long,
 ) {
-    private val key: SecretKey by lazy { Keys.hmacShaKeyFor(secret.toByteArray()) }
+    init {
+        require(secret.toByteArray(Charsets.UTF_8).size >= MIN_SECRET_LENGTH_BYTES) {
+            "jwt.secret must be at least $MIN_SECRET_LENGTH_BYTES bytes long"
+        }
+        require(!secret.contains("change-me", ignoreCase = true)) {
+            "jwt.secret must not use a placeholder value"
+        }
+    }
+
+    private val key: SecretKey by lazy { Keys.hmacShaKeyFor(secret.toByteArray(Charsets.UTF_8)) }
 
     fun generateToken(user: UserEntity): String =
         Jwts
@@ -36,4 +45,8 @@ class JwtService(
             .payload
 
     fun getUserId(token: String): String = validateToken(token).subject
+
+    companion object {
+        private const val MIN_SECRET_LENGTH_BYTES = 32
+    }
 }
