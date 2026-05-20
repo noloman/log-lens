@@ -1,12 +1,12 @@
 [versions]
-kotlin = "2.3.0"
-springBoot = "3.2.2"
-springDependencyManagement = "1.1.4"
-junitJupiter = "5.10.0"
+kotlin = "2.1.10"
+springBoot = "3.4.3"
+springDependencyManagement = "1.1.7"
+junitJupiter = "5.11.4"
 jjwt = "0.12.6"
 archunit = "1.4.1"
-springdoc = "2.5.0"
-jacksonKotlin = "2.15.2"
+springdoc = "2.8.5"
+jacksonKotlin = "2.18.2"
 bucket4j = "8.16.1"
 
 [libraries]
