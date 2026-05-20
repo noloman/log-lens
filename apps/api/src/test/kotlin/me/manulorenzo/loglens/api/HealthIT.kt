@@ -16,8 +16,18 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 @WebMvcTest(
     controllers = [HealthController::class],
     excludeFilters = [
-        ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = [me.manulorenzo.loglens.api.config.SecurityConfig::class]),
-        ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = [me.manulorenzo.loglens.api.config.JwtAuthenticationFilter::class]),
+        ComponentScan.Filter(
+            type = FilterType.ASSIGNABLE_TYPE,
+            classes = [me.manulorenzo.loglens.api.config.SecurityConfig::class],
+        ),
+        ComponentScan.Filter(
+            type = FilterType.ASSIGNABLE_TYPE,
+            classes = [me.manulorenzo.loglens.api.config.JwtAuthenticationFilter::class],
+        ),
+        ComponentScan.Filter(
+            type = FilterType.ASSIGNABLE_TYPE,
+            classes = [me.manulorenzo.loglens.api.config.IdempotencyFilter::class],
+        ),
     ],
 )
 class HealthIT(
