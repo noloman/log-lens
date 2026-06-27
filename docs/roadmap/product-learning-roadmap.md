@@ -4,6 +4,29 @@ LogLens is a learning project with a product goal: build a small but credible ba
 
 Use this document as the working checklist. Keep items checked only when the code, tests, and documentation are all in place.
 
+## Current Project Status
+
+Last reviewed: 2026-06-27.
+
+Overall status: **Phase 1 in progress**. The repository has a working Kotlin/Spring multi-module scaffold with API and worker apps, Dockerfiles, local Compose for API/worker/Postgres/Redis, JWT auth, structured log entry ingestion, JPA entities/repositories, idempotency support, Redis cache wiring, per-IP rate limiting, OpenAPI, ADRs, and a threat model.
+
+Current health:
+
+- [x] Multi-module Gradle project compiles.
+- [x] Unit and MVC/controller tests are largely passing.
+- [x] API and worker health endpoints exist and are tested.
+- [x] Authentication, log ingestion/listing, idempotency, caching, and rate-limit code paths have targeted tests.
+- [ ] Full `./gradlew test` is currently green on this machine. Current run failed because 7 Testcontainers-backed integration tests could not find/connect to a Docker environment.
+- [ ] Roadmap and docs are fully synchronized with implementation. This file was refreshed, but several deeper docs are still missing.
+
+Immediate priorities:
+
+1. Fix local Docker/Testcontainers availability and rerun `./gradlew test`.
+2. Finish Phase 1 documentation evidence: testing strategy, JPA/perf artifacts, README caching/performance section.
+3. Close remaining known security gaps from the threat model: tenant isolation and Redis hardening.
+4. Complete Week 5 Redis/rate-limit deliverables with measurable k6 evidence.
+5. Start Week 6 only after Phase 1 tests and docs are clean.
+
 ## Product Goal
 
 Build a backend system that supports:
@@ -146,22 +169,22 @@ Learn:
 
 Deliverables:
 
-- [ ] `apps/api` boots and exposes `GET /health`
-- [ ] `apps/worker` boots and exposes `GET /health`
-- [ ] `apps/api/Dockerfile`
-- [ ] `apps/worker/Dockerfile`
-- [ ] `deploy/docker/docker-compose.local.yml` runs Postgres only
+- [x] `apps/api` boots and exposes `GET /health`
+- [x] `apps/worker` boots and exposes `GET /health`
+- [x] `apps/api/Dockerfile`
+- [x] `apps/worker/Dockerfile`
+- [x] `deploy/docker/docker-compose.local.yml` runs local services
 - [ ] RFC7807 `ErrorResponse.kt`
-- [ ] `GlobalExceptionHandler.kt`
+- [x] `GlobalExceptionHandler.kt`
 - [ ] Temporary validation example endpoint
-- [ ] JSON logs through `logback-spring.xml` in API and worker
-- [ ] Correlation/request ID filter using MDC
-- [ ] Echo header `X-Request-Id`
-- [ ] `/health` integration test for API
+- [x] JSON logs through `logback-spring.xml` in API and worker
+- [x] Correlation/request ID filter using MDC
+- [x] Echo header `X-Request-Id`
+- [x] `/health` integration test for API
 - [ ] Validation integration test for API
 - [ ] `docs/testing/testing-strategy.md` v1
 - [x] `docs/adr/0001-layered-architecture.md`
-- [ ] README skeleton with What, Architecture v1, Local Dev, and ADRs
+- [x] README skeleton with What, Architecture v1, Local Dev, and ADRs
 
 ### Week 2: JPA/Hibernate, Transactions, DB Integration Testing
 
@@ -178,25 +201,25 @@ Learn:
 
 Deliverables:
 
-- [ ] `UserEntity`
-- [ ] `RefreshTokenEntity`
-- [ ] `LogEntity`
-- [ ] `LogChunkEntity`
-- [ ] Lazy relationships with explicit fetch plan through fetch join or `@EntityGraph`
-- [ ] `@Transactional` service method
-- [ ] `@Version` optimistic locking on one entity
+- [x] `UserEntity`
+- [x] `RefreshTokenEntity`
+- [x] `LogEntity`
+- [x] `LogChunkEntity`
+- [x] Lazy relationships with explicit fetch plan through fetch join or `@EntityGraph`
+- [x] `@Transactional` service method
+- [x] `@Version` optimistic locking on one entity
 - [ ] Hibernate batch config with `hibernate.jdbc.batch_size=20`
-- [ ] Intentional N+1 demonstration
-- [ ] N+1 fix
+- [x] Intentional N+1 demonstration
+- [x] N+1 fix
 - [ ] `docs/perf/n-plus-one-before.txt`
 - [ ] `docs/perf/n-plus-one-after.txt`
 - [ ] `docs/perf/explain-before.txt`
 - [ ] `docs/perf/explain-after.txt`
-- [ ] Testcontainers DB integration test
+- [x] Testcontainers DB integration test
 - [ ] Transaction rollback test
 - [ ] Optimistic lock conflict test
-- [ ] `docs/adr/0002-jpa-strategy.md`
-- [ ] README section for JPA/Hibernate decisions
+- [x] `docs/adr/0002-jpa-strategy.md`
+- [x] README section for JPA/Hibernate decisions
 
 ### Week 3: Security And Security Testing
 
@@ -210,19 +233,25 @@ Learn:
 
 Deliverables:
 
-- [ ] `POST /auth/signup`
-- [ ] `POST /auth/login`
-- [ ] `POST /auth/refresh`
-- [ ] Refresh token rotation stored in DB
-- [ ] RBAC example endpoint
-- [ ] Login success integration test
-- [ ] Login failure integration test
-- [ ] Expired token rejected test
-- [ ] Refresh rotation invalidates old token test
-- [ ] RBAC forbidden test
+- [x] `POST /auth/register`
+- [x] `POST /auth/login`
+- [x] `POST /auth/refresh`
+- [x] Refresh token rotation stored in DB
+- [x] RBAC security rule for `/v1/admin/**`
+- [x] Login success test
+- [x] Login failure test
+- [x] Expired token rejected test
+- [x] Refresh rotation invalidates old token test
+- [x] RBAC forbidden test
 - [x] `docs/security/threat-model.md`
 - [x] `docs/adr/0003-auth-strategy.md`
 - [x] README security model
+
+Notes:
+
+- Refresh tokens are single-use: `/v1/auth/refresh` deletes the consumed refresh token, stores a replacement refresh token for the same user, and returns the replacement token to the client.
+- Expired refresh tokens are deleted when encountered and do not produce replacement tokens.
+- Authentication error responses use generic problem details so raw exception messages are logged server-side but not returned to clients.
 
 ### Week 4: API Maturity, OpenAPI, Idempotency, API Tests
 
@@ -256,14 +285,14 @@ Learn:
 
 Deliverables:
 
-- [ ] Redis added to Compose
-- [ ] Cache-aside on a hot endpoint
-- [ ] Redis rate limiter middleware
-- [ ] Integration test proving cache hit or cache set/get behavior
-- [ ] Rate limit test where N requests produces chosen limit status
+- [x] Redis added to Compose
+- [x] Cache-aside on a hot endpoint
+- [ ] Redis-backed rate limiter middleware
+- [x] Integration test proving cache hit or cache set/get behavior
+- [x] Rate limit test where N requests produces chosen limit status
 - [ ] `docs/perf/k6-local.js`
 - [ ] `docs/perf/k6-local-report.md` with p95, throughput, and error rate
-- [ ] `docs/adr/0005-caching-strategy.md`
+- [x] `docs/adr/0005-caching-strategy.md`
 - [ ] README performance and caching section with numbers
 
 ### Week 6: Event-Driven Architecture, Kafka, Contract Testing, CI
