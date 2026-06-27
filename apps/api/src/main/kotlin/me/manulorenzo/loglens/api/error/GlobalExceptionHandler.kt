@@ -11,19 +11,23 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @RestControllerAdvice
 class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
     @ExceptionHandler(UnauthorizedException::class)
-    fun handleUnauthorized(ex: UnauthorizedException): ResponseEntity<ProblemDetail> =
-        ResponseEntity
+    fun handleUnauthorized(ex: UnauthorizedException): ResponseEntity<ProblemDetail> {
+        logger.error("UnauthorizedException", ex)
+        return ResponseEntity
             .status(HttpStatus.UNAUTHORIZED)
-            .body(ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.message ?: "Unauthorized"))
+            .body(ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "Unauthorized"))
+    }
 
     @ExceptionHandler(Exception::class)
-    fun handleAllExceptions(ex: Exception): ResponseEntity<ProblemDetail> =
-        ResponseEntity
+    fun handleAllExceptions(ex: Exception): ResponseEntity<ProblemDetail> {
+        logger.error("Exception", ex)
+        return ResponseEntity
             .status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body(
                 ProblemDetail.forStatusAndDetail(
                     HttpStatus.INTERNAL_SERVER_ERROR,
-                    ex.message ?: "Internal Server Error",
+                    "Internal Server Error",
                 ),
             )
+    }
 }
