@@ -11,9 +11,11 @@ import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
 import org.mockito.InjectMocks
 import org.mockito.Mock
+import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
@@ -21,6 +23,8 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.UUID
+import kotlin.test.assertNotEquals
+import kotlin.test.assertTrue
 
 @ExtendWith(MockitoExtension::class)
 class AuthServiceTest {
@@ -127,7 +131,15 @@ class AuthServiceTest {
         // Then
         assertNotNull(tokenResponse)
         assertEquals("new-access-token", tokenResponse.accessToken)
-        assertEquals(refreshToken.toString(), tokenResponse.refreshToken)
+        assertNotEquals(refreshToken.toString(), tokenResponse.refreshToken)
+        verify(refreshTokenRepository).delete(refreshTokenEntity)
+        val captor = ArgumentCaptor.forClass(RefreshTokenEntity::class.java)
+        verify(refreshTokenRepository).save(captor.capture())
+
+        val savedRefreshToken = captor.value
+        assertNotEquals(refreshToken, savedRefreshToken.token)
+        assertEquals(userEntity, savedRefreshToken.user)
+        assertTrue(savedRefreshToken.expiresAt.isAfter(Instant.now()))
     }
 
     @Test
@@ -158,6 +170,8 @@ class AuthServiceTest {
         assertThrows(UnauthorizedException::class.java) {
             authService.refresh(refreshToken)
         }
+        verify(refreshTokenRepository).delete(refreshTokenEntity)
+        verify(refreshTokenRepository, never()).save(any(RefreshTokenEntity::class.java))
     }
 
     @Test
