@@ -1,12 +1,14 @@
 # LogLens Product And Backend Engineering Roadmap
 
-LogLens is a learning project with a product goal: build a small but credible backend system for uploading, processing, storing, and analyzing application logs. The project is intentionally scoped like a compact Datadog, Sentry, or Logtail backend so it teaches production backend engineering through real product work.
+LogLens is a backend engineering learning project with a product goal: build a small but credible backend system for uploading, processing, storing, and analyzing application logs. The project is intentionally scoped like a compact Datadog, Sentry, or Logtail backend so it teaches production backend engineering through real product work.
 
 Use this document as the working checklist. Keep items checked only when the code, tests, and documentation are all in place.
 
+For the project learning method, see [`docs/learning/backend-engineering-learning-guide.md`](../learning/backend-engineering-learning-guide.md).
+
 ## Current Project Status
 
-Last reviewed: 2026-06-27.
+Last reviewed: 2026-07-02.
 
 Overall status: **Phase 1 in progress**. The repository has a working Kotlin/Spring multi-module scaffold with API and worker apps, Dockerfiles, local Compose for API/worker/Postgres/Redis, JWT auth, structured log entry ingestion, JPA entities/repositories, idempotency support, Redis cache wiring, per-IP rate limiting, OpenAPI, ADRs, and a threat model.
 
@@ -17,12 +19,12 @@ Current health:
 - [x] API and worker health endpoints exist and are tested.
 - [x] Authentication, log ingestion/listing, idempotency, caching, and rate-limit code paths have targeted tests.
 - [ ] Full `./gradlew test` is currently green on this machine. Current run failed because 7 Testcontainers-backed integration tests could not find/connect to a Docker environment.
-- [ ] Roadmap and docs are fully synchronized with implementation. This file was refreshed, but several deeper docs are still missing.
+- [ ] Roadmap and docs are fully synchronized with implementation. Core Week 1 testing docs exist; deeper perf, operations, and infrastructure docs are still missing.
 
 Immediate priorities:
 
 1. Fix local Docker/Testcontainers availability and rerun `./gradlew test`.
-2. Finish Phase 1 documentation evidence: testing strategy, JPA/perf artifacts, README caching/performance section.
+2. Finish Phase 1 documentation evidence: JPA/perf artifacts, README caching/performance section, and test-running docs.
 3. Close remaining known security gaps from the threat model: tenant isolation and Redis hardening.
 4. Complete Week 5 Redis/rate-limit deliverables with measurable k6 evidence.
 5. Start Week 6 only after Phase 1 tests and docs are clean.
@@ -54,6 +56,35 @@ Become a strong backend engineer by practicing the skills that matter in product
 - Cloud deployment, infrastructure as code, and Kubernetes
 - AI integration, evaluation, safety, and cost control
 - Testing across unit, integration, contract, E2E, load, and operational layers
+
+## How To Use This Roadmap
+
+The roadmap is a learning syllabus, not just a feature backlog. Each week should produce both working code and understanding.
+
+For each week:
+
+1. Read the learning topics and identify the main backend concept.
+2. Implement the smallest production-shaped behavior that exercises that concept.
+3. Write focused tests before broadening the implementation.
+4. Run the narrowest useful test command while iterating.
+5. Document what was learned, what tradeoffs were made, and what remains risky.
+6. Commit small, self-contained changes.
+7. Only mark checklist items complete when behavior, tests, and documentation are all present.
+
+Avoid mixing weeks unless a later-week issue blocks the current week. If a later concern appears, add it as a note under the relevant future week and return to the current learning checkpoint.
+
+## Learning Checkpoints
+
+At the end of each week, be able to explain:
+
+- What backend problem this week addressed.
+- Which files implement the behavior.
+- Which tests prove it.
+- Which failures or edge cases were discovered.
+- Which tradeoffs were accepted.
+- What a production team would still improve.
+
+If these cannot be explained clearly, the week is not truly done even if the code compiles.
 
 ## Target Architecture
 
