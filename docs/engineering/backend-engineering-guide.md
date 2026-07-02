@@ -1,6 +1,6 @@
-# Backend Engineering Learning Guide
+# Backend Engineering Guide
 
-LogLens exists to teach backend engineering through a realistic product. The product gives the work shape, but the learning goal is the priority.
+LogLens is built as a realistic backend system. The product gives the work shape, and the engineering process keeps each change understandable, testable, and reviewable.
 
 ## Working Principle
 
@@ -22,10 +22,10 @@ For each roadmap topic:
 4. Run a focused test.
 5. Read the failure carefully when it fails.
 6. Fix the cause, not only the symptom.
-7. Document the decision or lesson.
+7. Document the decision or tradeoff.
 8. Commit the result atomically.
 
-## What To Learn By Area
+## Engineering Areas
 
 ### HTTP APIs
 
@@ -60,18 +60,18 @@ For each roadmap topic:
 - How health checks, readiness, runbooks, and incident notes support production.
 - How load tests expose bottlenecks before deployment.
 
-## Definition Of Done For Learning
+## Definition Of Done
 
 A topic is done when:
 
 - The behavior works.
 - The focused tests pass.
-- The relevant failure modes were considered.
+- Relevant failure modes were considered.
 - The docs or roadmap explain the decision.
 - The commit is small enough to review on its own.
-- The learner can explain the code path without reading every line aloud.
+- The code path can be explained clearly.
 
-## Suggested Reflection Questions
+## Review Questions
 
 After each topic, answer:
 

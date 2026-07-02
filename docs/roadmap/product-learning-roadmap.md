@@ -1,10 +1,10 @@
 # LogLens Product And Backend Engineering Roadmap
 
-LogLens is a backend engineering learning project with a product goal: build a small but credible backend system for uploading, processing, storing, and analyzing application logs. The project is intentionally scoped like a compact Datadog, Sentry, or Logtail backend so it teaches production backend engineering through real product work.
+LogLens is a backend engineering project with a product goal: build a small but credible backend system for uploading, processing, storing, and analyzing application logs. The project is intentionally scoped like a compact Datadog, Sentry, or Logtail backend, with production-shaped implementation, tests, documentation, and operational concerns.
 
 Use this document as the working checklist. Keep items checked only when the code, tests, and documentation are all in place.
 
-For the project learning method, see [`docs/learning/backend-engineering-learning-guide.md`](../learning/backend-engineering-learning-guide.md).
+For the project engineering method, see [`docs/engineering/backend-engineering-guide.md`](../engineering/backend-engineering-guide.md).
 
 ## Current Project Status
 
@@ -43,9 +43,9 @@ Build a backend system that supports:
 - Observability from logs to metrics, dashboards, tracing, cloud, and Kubernetes
 - AWS ECS deployment with Terraform, followed by AWS EKS, HPA, and Helm
 
-## Learning Goal
+## Engineering Growth Goal
 
-Become a strong backend engineer by practicing the skills that matter in production:
+Build and maintain the skills that matter in production backend systems:
 
 - HTTP API design and correctness
 - Persistence modeling, transactions, and query performance
@@ -59,11 +59,11 @@ Become a strong backend engineer by practicing the skills that matter in product
 
 ## How To Use This Roadmap
 
-The roadmap is a learning syllabus, not just a feature backlog. Each week should produce both working code and understanding.
+The roadmap is an engineering plan, not just a feature backlog. Each week should produce working code, tests, documentation, and clear understanding of the tradeoffs.
 
 For each week:
 
-1. Read the learning topics and identify the main backend concept.
+1. Read the topics and identify the main backend concept.
 2. Implement the smallest production-shaped behavior that exercises that concept.
 3. Write focused tests before broadening the implementation.
 4. Run the narrowest useful test command while iterating.
@@ -71,9 +71,9 @@ For each week:
 6. Commit small, self-contained changes.
 7. Only mark checklist items complete when behavior, tests, and documentation are all present.
 
-Avoid mixing weeks unless a later-week issue blocks the current week. If a later concern appears, add it as a note under the relevant future week and return to the current learning checkpoint.
+Avoid mixing weeks unless a later-week issue blocks the current week. If a later concern appears, add it as a note under the relevant future week and return to the current checkpoint.
 
-## Learning Checkpoints
+## Review Checkpoints
 
 At the end of each week, be able to explain:
 

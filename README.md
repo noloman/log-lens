@@ -1,24 +1,24 @@
 # LogLens
 
 ## What is LogLens?
-LogLens is a backend engineering learning project built around a realistic product: a cloud-native, microservices-based log analysis backend that ingests logs, processes them asynchronously, and provides keyword + semantic search and AI-assisted analysis.
+LogLens is a cloud-native, microservices-based log analysis backend that ingests logs, processes them asynchronously, and provides keyword + semantic search and AI-assisted analysis.
 
-The main goal is not to ship a clone of Datadog or Sentry quickly. The goal is to become a stronger backend engineer by building production-shaped backend capabilities one layer at a time, understanding the tradeoffs, testing the behavior, and documenting the decisions.
+The project is intentionally built as a production-shaped backend system: each capability is implemented with clear architecture boundaries, focused tests, operational considerations, and documented tradeoffs.
 
-## Learning Approach
+## Engineering Approach
 
-Use this project as deliberate backend practice:
+Development follows a disciplined backend engineering workflow:
 
-1. Learn the concept before expanding the feature.
+1. Clarify the backend concept and behavior before expanding the feature.
 2. Implement the smallest production-shaped version.
 3. Write tests that prove the behavior and catch regressions.
 4. Observe failures instead of skipping over them.
 5. Document decisions, tradeoffs, and remaining risks.
 6. Commit changes in small, self-contained checkpoints.
 
-The roadmap is organized by backend engineering skill area. Work through it week by week unless a bug in the current week blocks progress. Later-week ideas should be parked in the roadmap instead of mixed into the current learning checkpoint.
+The roadmap is organized by backend engineering area. Work proceeds layer by layer unless a bug in the current layer blocks progress. Later-stage ideas are parked in the roadmap instead of mixed into the current delivery checkpoint.
 
-For the project learning method, see [docs/learning/backend-engineering-learning-guide.md](docs/learning/backend-engineering-learning-guide.md).
+For the project delivery method, see [docs/engineering/backend-engineering-guide.md](docs/engineering/backend-engineering-guide.md).
 
 ## Architecture Overview
 The project follows a clean, layered architecture as defined in [ADR 0001](docs/adr/0001-layered-architecture.md):
@@ -74,7 +74,7 @@ For our deprecation policy and version lifecycle, see [docs/api/deprecation-plan
 - (Planned) Kafka, Redis, AWS ECS/EKS, Terraform, pgvector, OpenTelemetry
 
 ## Roadmap
-The product and learning roadmap is tracked in [docs/roadmap/product-learning-roadmap.md](docs/roadmap/product-learning-roadmap.md). Use it as the source of truth for weekly deliverables, learning checkpoints, quality gates, and suggested product improvements.
+The product and engineering roadmap is tracked in [docs/roadmap/product-learning-roadmap.md](docs/roadmap/product-learning-roadmap.md). Use it as the source of truth for weekly deliverables, review checkpoints, quality gates, and suggested product improvements.
 
 ## Local Development
 ### Requirements
