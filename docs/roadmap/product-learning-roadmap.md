@@ -1,4 +1,4 @@
-# LogLens Product And Backend Engineering Roadmap
+# LogLens Backend Engineering Roadmap
 
 LogLens is a backend engineering project with a product goal: build a small but credible backend system for uploading, processing, storing, and analyzing application logs. The project is intentionally scoped like a compact Datadog, Sentry, or Logtail backend, with production-shaped implementation, tests, documentation, and operational concerns.
 
@@ -29,7 +29,7 @@ Immediate priorities:
 4. Complete Week 5 Redis/rate-limit deliverables with measurable k6 evidence.
 5. Start Week 6 only after Phase 1 tests and docs are clean.
 
-## Product Goal
+## Product Scope
 
 Build a backend system that supports:
 
@@ -43,9 +43,9 @@ Build a backend system that supports:
 - Observability from logs to metrics, dashboards, tracing, cloud, and Kubernetes
 - AWS ECS deployment with Terraform, followed by AWS EKS, HPA, and Helm
 
-## Engineering Growth Goal
+## Engineering Competency Goals
 
-Build and maintain the skills that matter in production backend systems:
+Build and maintain the capabilities that matter in production backend systems:
 
 - HTTP API design and correctness
 - Persistence modeling, transactions, and query performance
@@ -56,6 +56,15 @@ Build and maintain the skills that matter in production backend systems:
 - Cloud deployment, infrastructure as code, and Kubernetes
 - AI integration, evaluation, safety, and cost control
 - Testing across unit, integration, contract, E2E, load, and operational layers
+
+## Delivery Principles
+
+- Keep `loglens-api` and `loglens-worker` independently buildable and deployable.
+- Use Kafka for service-to-service workflow communication once asynchronous ingestion starts.
+- Keep shared contracts under `libs/common/events/v1`; avoid sharing service internals between apps.
+- Prefer explicit boundaries: DTOs for transport, entities for persistence, services for business logic, repositories for data access.
+- Add tests at the lowest layer that proves the behavior; use full integration tests only when framework wiring or real infrastructure matters.
+- Treat docs, ADRs, operational notes, and performance evidence as part of the deliverable, not optional polish.
 
 ## How To Use This Roadmap
 
@@ -167,10 +176,17 @@ Testing layers to build progressively:
 
 Testing documents to maintain:
 
-- [ ] `docs/testing/testing-strategy.md`
+- [x] `docs/testing/testing-strategy.md`
 - [ ] `docs/testing/test-pyramid.md`
 - [ ] `docs/testing/how-to-run-tests.md`
 - [ ] CI workflow running unit and integration tests on PRs
+
+Reference materials:
+
+- Spring Boot testing: https://docs.spring.io/spring-boot/reference/testing/
+- Testcontainers: https://java.testcontainers.org/
+- GitHub Actions: https://docs.github.com/en/actions
+- k6: https://k6.io/docs/
 
 ## Quality Gates
 
@@ -197,6 +213,17 @@ Learn:
 - RFC7807 problem details
 - Spring testing
 - ADRs
+
+References:
+
+- Docker: https://docs.docker.com/get-started/
+- Docker Compose: https://docs.docker.com/compose/
+- Spring Boot web: https://docs.spring.io/spring-boot/reference/web/
+- Spring bean wiring: https://docs.spring.io/spring-framework/reference/core/beans.html
+- Spring logging: https://docs.spring.io/spring-boot/reference/features/logging.html
+- Logback configuration: https://logback.qos.ch/manual/configuration.html
+- RFC7807: https://datatracker.ietf.org/doc/html/rfc7807
+- ADRs: https://adr.github.io/
 
 Deliverables:
 
@@ -230,6 +257,19 @@ Learn:
 - Postgres `EXPLAIN`
 - Testcontainers Postgres
 
+References:
+
+- Spring Data JPA: https://docs.spring.io/spring-data/jpa/reference/
+- Hibernate user guide: https://docs.jboss.org/hibernate/orm/current/userguide/html_single/Hibernate_User_Guide.html
+- Hibernate entity states: https://docs.jboss.org/hibernate/orm/current/userguide/html_single/Hibernate_User_Guide.html#pc-states
+- Spring transactions: https://docs.spring.io/spring-framework/reference/data-access/transaction.html
+- Hibernate fetching: https://docs.jboss.org/hibernate/orm/current/userguide/html_single/Hibernate_User_Guide.html#fetching
+- N+1 query problem: https://vladmihalcea.com/n-plus-1-query-problem/
+- Optimistic locking: https://docs.jboss.org/hibernate/orm/current/userguide/html_single/Hibernate_User_Guide.html#locking-optimistic
+- Hibernate batching: https://docs.jboss.org/hibernate/orm/current/userguide/html_single/Hibernate_User_Guide.html#batch
+- Postgres EXPLAIN: https://www.postgresql.org/docs/current/using-explain.html
+- Testcontainers Postgres: https://java.testcontainers.org/modules/databases/postgres/
+
 Deliverables:
 
 - [x] `UserEntity`
@@ -239,16 +279,16 @@ Deliverables:
 - [x] Lazy relationships with explicit fetch plan through fetch join or `@EntityGraph`
 - [x] `@Transactional` service method
 - [x] `@Version` optimistic locking on one entity
-- [ ] Hibernate batch config with `hibernate.jdbc.batch_size=20`
+- [x] Hibernate batch config with `hibernate.jdbc.batch_size=20`
 - [x] Intentional N+1 demonstration
 - [x] N+1 fix
-- [ ] `docs/perf/n-plus-one-before.txt`
-- [ ] `docs/perf/n-plus-one-after.txt`
+- [x] `docs/perf/n-plus-one-before.txt`
+- [x] `docs/perf/n-plus-one-after.txt`
 - [ ] `docs/perf/explain-before.txt`
 - [ ] `docs/perf/explain-after.txt`
 - [x] Testcontainers DB integration test
-- [ ] Transaction rollback test
-- [ ] Optimistic lock conflict test
+- [x] Transaction rollback test
+- [x] Optimistic lock conflict test
 - [x] `docs/adr/0002-jpa-strategy.md`
 - [x] README section for JPA/Hibernate decisions
 
@@ -262,6 +302,14 @@ Learn:
 - OWASP Top 10
 - Refresh token rotation
 
+References:
+
+- Spring Security: https://docs.spring.io/spring-security/reference/
+- Spring Security JWT resource server concepts: https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/jwt.html
+- Password storage: https://docs.spring.io/spring-security/reference/features/authentication/password-storage.html
+- OWASP Top 10: https://owasp.org/www-project-top-ten/
+- Refresh tokens: https://auth0.com/blog/refresh-tokens-what-are-they-and-when-to-use-them/
+
 Deliverables:
 
 - [x] `POST /auth/register`
@@ -269,11 +317,13 @@ Deliverables:
 - [x] `POST /auth/refresh`
 - [x] Refresh token rotation stored in DB
 - [x] RBAC security rule for `/v1/admin/**`
+- [ ] Tenant isolation on user-owned log APIs
 - [x] Login success test
 - [x] Login failure test
 - [x] Expired token rejected test
 - [x] Refresh rotation invalidates old token test
 - [x] RBAC forbidden test
+- [ ] Tenant isolation HTTP integration tests
 - [x] `docs/security/threat-model.md`
 - [x] `docs/adr/0003-auth-strategy.md`
 - [x] README security model
@@ -292,6 +342,13 @@ Learn:
 - OpenAPI
 - springdoc
 - HTTP semantics
+
+References:
+
+- API design: https://learn.microsoft.com/en-us/azure/architecture/best-practices/api-design
+- OpenAPI specification: https://swagger.io/specification/
+- springdoc: https://springdoc.org/
+- HTTP semantics: https://www.rfc-editor.org/rfc/rfc9110.html
 
 Deliverables:
 
@@ -313,6 +370,12 @@ Learn:
 - Cache-aside pattern
 - Rate limiting
 - k6
+
+References:
+
+- Redis docs: https://redis.io/docs/latest/
+- Redis rate limiting patterns: https://redis.io/redis-best-practices/basic-rate-limiting/
+- k6 getting started: https://k6.io/docs/get-started/
 
 Deliverables:
 
@@ -338,6 +401,21 @@ Learn:
 - Transactional outbox concept
 - Testcontainers Kafka
 - GitHub Actions
+
+References:
+
+- Kafka introduction: https://kafka.apache.org/documentation/#introduction
+- Kafka consumers: https://kafka.apache.org/documentation/#intro_consumers
+- Kafka delivery semantics: https://kafka.apache.org/documentation/#semantics
+- Spring Kafka: https://docs.spring.io/spring-kafka/reference/
+- Spring Kafka receiving messages: https://docs.spring.io/spring-kafka/reference/kafka/receiving-messages.html
+- Spring Kafka retry topics: https://docs.spring.io/spring-kafka/reference/retrytopic.html
+- Spring Kafka error handling: https://docs.spring.io/spring-kafka/reference/kafka/annotation-error-handling.html
+- Spring Kafka metrics: https://docs.spring.io/spring-kafka/reference/appendix/micrometer.html
+- Idempotent consumer pattern: https://martinfowler.com/articles/patterns-of-distributed-systems/idempotent-consumer.html
+- Transactional outbox pattern: https://microservices.io/patterns/data/transactional-outbox.html
+- Testcontainers Kafka: https://java.testcontainers.org/modules/kafka/
+- GitHub Actions: https://docs.github.com/en/actions
 
 Deliverables:
 
@@ -371,6 +449,15 @@ Learn:
 - Bulkheads
 - AWS retry guidance
 
+References:
+
+- Resilience4j: https://resilience4j.readme.io/
+- Circuit breakers: https://resilience4j.readme.io/docs/circuitbreaker
+- Retry: https://resilience4j.readme.io/docs/retry
+- TimeLimiter: https://resilience4j.readme.io/docs/timelimiter
+- Bulkhead: https://resilience4j.readme.io/docs/bulkhead
+- AWS retry guidance: https://docs.aws.amazon.com/general/latest/gr/api-retries.html
+
 Deliverables:
 
 - [ ] Circuit breaker applied to external calls
@@ -395,6 +482,15 @@ Learn:
 - Metric types
 - RED method
 - Hibernate statistics
+
+References:
+
+- Spring Boot Actuator: https://docs.spring.io/spring-boot/reference/actuator/
+- Micrometer: https://micrometer.io/docs
+- Prometheus: https://prometheus.io/docs/introduction/overview/
+- Prometheus metric types: https://prometheus.io/docs/concepts/metric_types/
+- RED method: https://www.weave.works/blog/the-red-method-key-metrics-for-microservices-architecture/
+- Hibernate statistics: https://docs.jboss.org/hibernate/orm/current/userguide/html_single/Hibernate_User_Guide.html#statistics
 
 Deliverables:
 
@@ -424,6 +520,15 @@ Learn:
 - IAM
 - VPC basics
 
+References:
+
+- AWS Cloud Practitioner essentials: https://aws.amazon.com/training/digital/aws-cloud-practitioner-essentials/
+- S3 presigned URLs: https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-presigned-url.html
+- EC2 getting started: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EC2_GetStarted.html
+- RDS Postgres getting started: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_GettingStarted.CreatingConnecting.PostgreSQL.html
+- IAM introduction: https://docs.aws.amazon.com/IAM/latest/UserGuide/introduction.html
+- VPC overview: https://docs.aws.amazon.com/vpc/latest/userguide/what-is-amazon-vpc.html
+
 Deliverables:
 
 - [ ] Real S3-backed `POST /uploads/presign`
@@ -449,6 +554,16 @@ Learn:
 - CloudWatch Monitoring
 - k6
 
+References:
+
+- ECS: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html
+- ECR image push: https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html
+- ALB: https://docs.aws.amazon.com/elasticloadbalancing/latest/application/introduction.html
+- ECS `awslogs`: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using_awslogs.html
+- CloudWatch Logs: https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/WhatIsCloudWatchLogs.html
+- CloudWatch monitoring: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/WhatIsCloudWatch.html
+- k6: https://k6.io/docs/
+
 Deliverables:
 
 - [ ] API deployed as ECS service
@@ -471,6 +586,14 @@ Learn:
 - S3 backend
 - Terraform modules
 - `terraform plan`
+
+References:
+
+- Terraform AWS tutorials: https://developer.hashicorp.com/terraform/tutorials/aws-get-started
+- Terraform state: https://developer.hashicorp.com/terraform/language/state
+- S3 backend: https://developer.hashicorp.com/terraform/language/settings/backends/s3
+- Terraform modules: https://developer.hashicorp.com/terraform/language/modules
+- Terraform plan: https://developer.hashicorp.com/terraform/cli/commands/plan
 
 Deliverables:
 
@@ -498,6 +621,13 @@ Learn:
 - Production best practices
 - OWASP LLM Top 10
 
+References:
+
+- OpenAI docs: https://platform.openai.com/docs
+- Structured outputs: https://platform.openai.com/docs/guides/structured-outputs
+- Production best practices: https://platform.openai.com/docs/guides/production-best-practices
+- OWASP LLM Top 10: https://owasp.org/www-project-top-10-for-large-language-model-applications/
+
 Deliverables:
 
 - [ ] `POST /ai/analyze` returns validated structured JSON
@@ -520,6 +650,15 @@ Learn:
 - RAG
 - OpenTelemetry Java
 - Jaeger
+
+References:
+
+- pgvector: https://github.com/pgvector/pgvector
+- pgvector indexing: https://github.com/pgvector/pgvector#indexing
+- RAG overview: https://www.pinecone.io/learn/retrieval-augmented-generation/
+- OpenTelemetry Java: https://opentelemetry.io/docs/languages/java/
+- OpenTelemetry Java instrumentation: https://opentelemetry.io/docs/zero-code/java/
+- Jaeger: https://www.jaegertracing.io/docs/latest/
 
 Deliverables:
 
@@ -546,6 +685,10 @@ Learn:
 - README quality and repository presentation
 - System-level verification
 
+References:
+
+- GitHub README guidance: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes
+
 Deliverables:
 
 - [ ] End-to-end pipeline works: presign to upload to ingest to Kafka to worker to chunks to embeddings to semantic to RAG
@@ -569,6 +712,11 @@ Learn:
 - Kubernetes overview
 - kind
 
+References:
+
+- Kubernetes overview: https://kubernetes.io/docs/concepts/overview/
+- kind: https://kind.sigs.k8s.io/
+
 Deliverables:
 
 - [ ] API manifest
@@ -590,6 +738,12 @@ Learn:
 - AWS Load Balancer Controller
 - metrics-server
 
+References:
+
+- EKS: https://docs.aws.amazon.com/eks/latest/userguide/
+- AWS Load Balancer Controller: https://kubernetes-sigs.github.io/aws-load-balancer-controller/
+- metrics-server: https://github.com/kubernetes-sigs/metrics-server
+
 Deliverables:
 
 - [ ] EKS cluster created
@@ -609,6 +763,14 @@ Learn:
 - Liveness, readiness, and startup probes
 - HikariCP
 - k6
+
+References:
+
+- HPA: https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/
+- Requests and limits: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+- Probes: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+- HikariCP: https://github.com/brettwooldridge/HikariCP
+- k6: https://k6.io/docs/
 
 Deliverables:
 
@@ -633,6 +795,13 @@ Learn:
 - Values files
 - Kubernetes deployment strategy
 
+References:
+
+- Helm: https://helm.sh/docs/
+- Helm charts: https://helm.sh/docs/topics/charts/
+- Helm values files: https://helm.sh/docs/chart_template_guide/values_files/
+- Kubernetes deployment strategies: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
+
 Deliverables:
 
 - [ ] Helm chart for API and worker at `deploy/helm/loglens/`
@@ -648,7 +817,7 @@ Deliverables:
 
 ## Suggested Product Improvements
 
-These features would make LogLens feel more like a real product while still teaching valuable backend engineering.
+These features would make LogLens feel more like a real product while reinforcing useful backend engineering concerns.
 
 ### Ingestion And Data Model
 
@@ -712,19 +881,19 @@ These features would make LogLens feel more like a real product while still teac
 - [ ] Add monthly AWS cost budget and alarm
 - [ ] Add performance budget per endpoint
 
-## Suggested Learning Enhancements
+## Engineering Practice Enhancements
 
-Use these as stretch goals when the core roadmap feels too easy.
+Use these as stretch goals when the core roadmap is stable.
 
-- [ ] Write one short engineering note after each week: what was confusing, what failed, what changed
+- [ ] Write one short engineering note after each week: what failed, what changed, and what tradeoff was accepted
 - [ ] Record every production-style decision as an ADR, including rejected alternatives
-- [ ] Keep a `docs/interview-notes/` folder with explanations of tricky topics
+- [ ] Keep a `docs/engineering-notes/` folder with explanations of tricky topics
 - [ ] For every major feature, write down the failure modes before implementation
 - [ ] For every new dependency, document why it is worth adding
 - [ ] Add code review checklists for security, persistence, messaging, and observability
 - [ ] Practice diagnosing issues from logs, metrics, traces, and database evidence before changing code
 
-## Outcome
+## Final Engineering Outcome
 
 By the end, the repository should demonstrate:
 
