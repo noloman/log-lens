@@ -17,10 +17,11 @@ class LogEntryService(
 ) {
     @CacheEvict(value = ["logs"], allEntries = true)
     @Transactional
-    fun createLog(request: CreateLogRequest): LogResponse {
+    fun createLog(userId: UUID, request: CreateLogRequest): LogResponse {
         val entity =
             LogEntryEntity(
                 serviceName = request.serviceName,
+                userId = userId,
                 level = request.level,
                 message = request.message,
             )
@@ -29,21 +30,21 @@ class LogEntryService(
     }
 
     @Transactional(readOnly = true)
-    fun getLogs(serviceName: String?): List<LogResponse> {
+    fun getLogs(userId: UUID, serviceName: String?): List<LogResponse> {
         val entities =
             if (serviceName != null) {
-                logEntryRepository.findByServiceName(serviceName)
+                logEntryRepository.findByUserIdAndServiceName(userId = userId, serviceName = serviceName)
             } else {
-                logEntryRepository.findAll()
+                logEntryRepository.findByUserId(userId)
             }
         return entities.map(::toResponse)
     }
 
     @Cacheable(value = ["logs"], key = "#id")
     @Transactional(readOnly = true)
-    fun getLogById(id: UUID): LogResponse {
+    fun getLogById(id: UUID, userId: UUID): LogResponse {
         val entity =
-            logEntryRepository.findById(id).orElseThrow {
+            logEntryRepository.findByIdAndUserId(id, userId).orElseThrow {
                 EntityNotFoundException("Log entry with ID $id not found")
             }
         return toResponse(entity)

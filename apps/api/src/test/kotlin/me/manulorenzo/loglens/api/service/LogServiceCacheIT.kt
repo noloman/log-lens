@@ -12,10 +12,11 @@ import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
+import java.util.UUID
 
 @SpringBootTest(
     properties = [
-        // Re-enable Redis and Cache auto-configuration excluded in test application.yml
+        // Re-enable Redis and Cache autoconfiguration excluded in test application.yml
         "spring.autoconfigure.exclude=",
     ],
 )
@@ -50,22 +51,25 @@ class LogServiceCacheIT {
 
     @Test
     fun `getLogById returns cached result on second call`() {
-        val log = service.createLog(CreateLogRequest("svc", "INFO", "test"))
+        val userId = UUID.randomUUID()
+        val log = service.createLog(userId, CreateLogRequest("svc", "INFO", "test"))
 
-        service.getLogById(log.id) // populates cache
+        service.getLogById(log.id, userId) // populates cache
 
         val cache = cacheManager.getCache("logs")!!
         assertThat(cache.get(log.id)).isNotNull
 
-        service.getLogById(log.id) // should hit cache, not DB
+        service.getLogById(log.id, userId) // should hit cache, not DB
     }
 
     @Test
     fun `createLog evicts cache`() {
-        val log = service.createLog(CreateLogRequest("svc", "INFO", "test"))
-        service.getLogById(log.id) // populate cache
+        val userId = UUID.randomUUID()
+        val log = service.createLog(userId, CreateLogRequest("svc", "INFO", "test"))
 
-        service.createLog(CreateLogRequest("svc", "INFO", "new")) // should evict
+        service.getLogById(log.id, userId) // populate cache
+
+        service.createLog(userId, CreateLogRequest("svc", "INFO", "new")) // should evict
 
         val cache = cacheManager.getCache("logs")!!
         assertThat(cache.get(log.id)).isNull()

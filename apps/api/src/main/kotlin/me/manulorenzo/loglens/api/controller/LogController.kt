@@ -11,6 +11,7 @@ import me.manulorenzo.loglens.api.dto.LogResponse
 import me.manulorenzo.loglens.api.service.LogEntryService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -39,8 +40,10 @@ class LogController(
     @PostMapping
     fun createLog(
         @Valid @RequestBody request: CreateLogRequest,
+        authentication: Authentication,
     ): ResponseEntity<LogResponse> {
-        val response = logEntryService.createLog(request)
+        val userId = currentUserId(authentication)
+        val response = logEntryService.createLog(userId, request)
         return ResponseEntity.status(HttpStatus.CREATED).body(response)
     }
 
@@ -53,7 +56,11 @@ class LogController(
     @GetMapping
     fun getLogs(
         @RequestParam(required = false) serviceName: String?,
-    ): List<LogResponse> = logEntryService.getLogs(serviceName)
+        authentication: Authentication,
+    ): List<LogResponse> {
+        val userId = currentUserId(authentication)
+        return logEntryService.getLogs(userId, serviceName)
+    }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get a log entry by ID", description = "Returns a single log entry by its ID")
@@ -69,5 +76,11 @@ class LogController(
     )
     fun getLog(
         @PathVariable id: UUID,
-    ): LogResponse = logEntryService.getLogById(id)
+        authentication: Authentication,
+    ): LogResponse {
+        val currentUserId = currentUserId(authentication)
+        return logEntryService.getLogById(id, currentUserId)
+    }
+
+    private fun currentUserId(authentication: Authentication) = UUID.fromString(authentication.principal as String)
 }

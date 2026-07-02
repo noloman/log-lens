@@ -14,6 +14,7 @@ class LogEntryEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     val id: UUID? = null,
+    val userId: UUID,
     val serviceName: String,
     val level: String,
     val message: String,
