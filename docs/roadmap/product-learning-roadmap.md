@@ -174,15 +174,15 @@ Deliverables:
 - [x] `apps/api/Dockerfile`
 - [x] `apps/worker/Dockerfile`
 - [x] `deploy/docker/docker-compose.local.yml` runs local services
-- [ ] RFC7807 `ErrorResponse.kt`
+- [x] RFC7807 `ProblemDetail` error responses
 - [x] `GlobalExceptionHandler.kt`
-- [ ] Temporary validation example endpoint
+- [x] Validated request DTO on API endpoint
 - [x] JSON logs through `logback-spring.xml` in API and worker
 - [x] Correlation/request ID filter using MDC
 - [x] Echo header `X-Request-Id`
 - [x] `/health` integration test for API
-- [ ] Validation integration test for API
-- [ ] `docs/testing/testing-strategy.md` v1
+- [x] Validation integration test for API
+- [x] `docs/testing/testing-strategy.md` v1
 - [x] `docs/adr/0001-layered-architecture.md`
 - [x] README skeleton with What, Architecture v1, Local Dev, and ADRs
 
