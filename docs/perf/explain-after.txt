@@ -1,0 +1,37 @@
+Scenario: optimized fetch-join path for LogService.getLogWithChunksOptimized(logId)
+
+Purpose:
+Capture the database evidence for the explicit fetch-plan version. The optimized repository
+method loads the parent log and chunks together through a join, matching the service's data
+requirement in a single SQL statement.
+
+Sample data:
+- log id: 11111111-1111-1111-1111-111111111111
+- chunks: 3 rows in log_chunk
+
+Query: load the parent log and chunks together
+
+SQL:
+explain analyze
+select l.*, c.*
+from logs l
+join log_chunk c on c.log_id = l.id
+where l.id = '11111111-1111-1111-1111-111111111111';
+
+Postgres output:
+
+                                                        QUERY PLAN
+--------------------------------------------------------------------------------------------------------------------------
+ Nested Loop  (cost=0.14..29.20 rows=4 width=628) (actual time=0.017..0.018 rows=3 loops=1)
+   ->  Index Scan using logs_pkey on logs l  (cost=0.14..8.16 rows=1 width=564) (actual time=0.012..0.012 rows=1 loops=1)
+         Index Cond: (id = '11111111-1111-1111-1111-111111111111'::uuid)
+   ->  Seq Scan on log_chunk c  (cost=0.00..21.00 rows=4 width=64) (actual time=0.003..0.004 rows=3 loops=1)
+         Filter: (log_id = '11111111-1111-1111-1111-111111111111'::uuid)
+ Planning Time: 0.472 ms
+ Execution Time: 0.052 ms
+(7 rows)
+
+Interpretation:
+The optimized path represents the log-with-chunks use case as one SQL statement. Hibernate
+can hydrate the parent log and its chunks from the same result set instead of issuing a
+separate lazy-loading statement after the parent row is read.

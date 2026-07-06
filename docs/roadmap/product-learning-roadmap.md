@@ -284,8 +284,8 @@ Deliverables:
 - [x] N+1 fix
 - [x] `docs/perf/n-plus-one-before.txt`
 - [x] `docs/perf/n-plus-one-after.txt`
-- [ ] `docs/perf/explain-before.txt`
-- [ ] `docs/perf/explain-after.txt`
+- [x] `docs/perf/explain-before.txt`
+- [x] `docs/perf/explain-after.txt`
 - [x] Testcontainers DB integration test
 - [x] Transaction rollback test
 - [x] Optimistic lock conflict test

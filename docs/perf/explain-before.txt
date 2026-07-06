@@ -1,0 +1,51 @@
+Scenario: naive lazy-loading path for LogService.getLogWithChunksNaive(logId)
+
+Purpose:
+Capture the database evidence for the pre-optimization behavior. The naive JPA path first
+loads the parent log row by id, then accesses the lazy chunks collection, causing a second
+SQL statement for the chunks.
+
+Sample data:
+- log id: 11111111-1111-1111-1111-111111111111
+- chunks: 3 rows in log_chunk
+
+Query 1: load the parent log
+
+SQL:
+explain analyze
+select *
+from logs
+where id = '11111111-1111-1111-1111-111111111111';
+
+Postgres output:
+
+                                                    QUERY PLAN
+------------------------------------------------------------------------------------------------------------------
+ Index Scan using logs_pkey on logs  (cost=0.14..8.16 rows=1 width=564) (actual time=0.009..0.009 rows=1 loops=1)
+   Index Cond: (id = '11111111-1111-1111-1111-111111111111'::uuid)
+ Planning Time: 0.279 ms
+ Execution Time: 0.037 ms
+(4 rows)
+
+Query 2: load the lazy chunks collection
+
+SQL:
+explain analyze
+select *
+from log_chunk
+where log_id = '11111111-1111-1111-1111-111111111111';
+
+Postgres output:
+
+                                             QUERY PLAN
+-----------------------------------------------------------------------------------------------------
+ Seq Scan on log_chunk  (cost=0.00..21.00 rows=4 width=64) (actual time=0.007..0.007 rows=3 loops=1)
+   Filter: (log_id = '11111111-1111-1111-1111-111111111111'::uuid)
+ Planning Time: 0.270 ms
+ Execution Time: 0.033 ms
+(4 rows)
+
+Interpretation:
+The naive path requires two database statements for a single log: one index lookup for the
+parent row and one additional scan for the chunks. Across a list of logs, this pattern can
+turn into an N+1 query problem.
