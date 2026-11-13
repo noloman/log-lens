@@ -1,5 +1,6 @@
 package me.manulorenzo.loglens.api.error
 
+import jakarta.persistence.EntityNotFoundException
 import me.manulorenzo.loglens.api.error.exception.UnauthorizedException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
@@ -29,5 +30,12 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
                     "Internal Server Error",
                 ),
             )
+    }
+
+    @ExceptionHandler(EntityNotFoundException::class)
+    fun handleEntityNotFound(ex: EntityNotFoundException): ResponseEntity<ProblemDetail> {
+        logger.error("EntityNotFoundException", ex)
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, "Not Found"))
     }
 }

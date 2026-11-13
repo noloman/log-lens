@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
@@ -58,9 +59,22 @@ class LogControllerIT {
 
     private fun baseUrl() = "http://localhost:$port"
 
-    private fun authedHeaders(): HttpHeaders = HttpHeaders().apply {
+    private fun authedHeaders(token: String = accessToken): HttpHeaders = HttpHeaders().apply {
         contentType = MediaType.APPLICATION_JSON
-        setBearerAuth(accessToken)
+        setBearerAuth(token)
+    }
+
+    private fun registerAndLogin(): String {
+        val email = "logit-${UUID.randomUUID()}@test.com"
+        val authBody = """{"email":"$email","password":"password"}"""
+        val authHeaders = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
+
+        client.postForEntity("${baseUrl()}/v1/auth/register", HttpEntity(authBody, authHeaders), String::class.java)
+        val response =
+            client.postForEntity("${baseUrl()}/v1/auth/login", HttpEntity(authBody, authHeaders), Map::class.java)
+
+        @Suppress("UNCHECKED_CAST")
+        return (response.body as Map<String, String>)["accessToken"]!!
     }
 
     private fun postLog(body: String, headers: HttpHeaders = authedHeaders()) =
@@ -75,15 +89,7 @@ class LogControllerIT {
     fun setUp() {
         logEntryRepository.deleteAll()
 
-        val email = "logit-${UUID.randomUUID()}@test.com"
-        val authBody = """{"email":"$email","password":"password"}"""
-        val authHeaders = HttpHeaders().apply { contentType = MediaType.APPLICATION_JSON }
-
-        client.postForEntity("${baseUrl()}/v1/auth/register", HttpEntity(authBody, authHeaders), String::class.java)
-        val loginResponse = client.postForEntity("${baseUrl()}/v1/auth/login", HttpEntity(authBody, authHeaders), Map::class.java)
-
-        @Suppress("UNCHECKED_CAST")
-        accessToken = (loginResponse.body as Map<String, String>)["accessToken"]!!
+        accessToken = registerAndLogin()
     }
 
     @Nested
@@ -217,6 +223,59 @@ class LogControllerIT {
             }
 
             assertEquals(0, logEntryRepository.count())
+        }
+    }
+
+    @Nested
+    inner class TenantIsolation {
+        @Test
+        fun `GET log by id should return 404 for another user's log`() {
+            val created = postLog("""{"serviceName":"api","level":"INFO","message":"user A only"}""")
+            val log = objectMapper.readValue(created.body, LogResponse::class.java)
+            val userBToken = registerAndLogin()
+
+            val exception = assertThrows<HttpClientErrorException.NotFound> {
+                client.exchange(
+                    "${baseUrl()}/v1/logs/${log.id}",
+                    HttpMethod.GET,
+                    HttpEntity<Void>(authedHeaders(userBToken)),
+                    String::class.java,
+                )
+            }
+
+            assertEquals(HttpStatus.NOT_FOUND, exception.statusCode)
+        }
+
+        @Test
+        fun `GET logs should not include another user's logs`() {
+            postLog("""{"serviceName":"api","level":"INFO","message":"user A only"}""")
+            val userBToken = registerAndLogin()
+            postLog(
+                """{"serviceName":"worker","level":"WARN","message":"user B only"}""",
+                authedHeaders(userBToken),
+            )
+
+            val response = getLogs(headers = authedHeaders(userBToken))
+            val logs = objectMapper.readValue(response.body, Array<LogResponse>::class.java)
+
+            assertEquals(1, logs.size)
+            assertEquals("user B only", logs.single().message)
+        }
+
+        @Test
+        fun `GET logs filtered by serviceName should not include another user's logs`() {
+            postLog("""{"serviceName":"shared","level":"INFO","message":"user A only"}""")
+            val userBToken = registerAndLogin()
+            postLog(
+                """{"serviceName":"shared","level":"INFO","message":"user B only"}""",
+                authedHeaders(userBToken),
+            )
+
+            val response = getLogs(serviceName = "shared", headers = authedHeaders(userBToken))
+            val logs = objectMapper.readValue(response.body, Array<LogResponse>::class.java)
+
+            assertEquals(1, logs.size)
+            assertEquals("user B only", logs.single().message)
         }
     }
 }

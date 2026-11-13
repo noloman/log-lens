@@ -1,8 +1,10 @@
 package me.manulorenzo.loglens.api.service
 
+import jakarta.persistence.EntityNotFoundException
 import me.manulorenzo.loglens.api.dto.CreateLogRequest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.cache.CacheManager
@@ -57,7 +59,7 @@ class LogServiceCacheIT {
         service.getLogById(log.id, userId) // populates cache
 
         val cache = cacheManager.getCache("logs")!!
-        assertThat(cache.get(log.id)).isNotNull
+        assertThat(cache.get("$userId:${log.id}")).isNotNull
 
         service.getLogById(log.id, userId) // should hit cache, not DB
     }
@@ -72,6 +74,19 @@ class LogServiceCacheIT {
         service.createLog(userId, CreateLogRequest("svc", "INFO", "new")) // should evict
 
         val cache = cacheManager.getCache("logs")!!
-        assertThat(cache.get(log.id)).isNull()
+        assertThat(cache.get("$userId:${log.id}")).isNull()
+    }
+
+    @Test
+    fun `cached log remains isolated from another user`() {
+        val ownerId = UUID.randomUUID()
+        val otherUserId = UUID.randomUUID()
+        val log = service.createLog(ownerId, CreateLogRequest("svc", "INFO", "owner only"))
+
+        service.getLogById(log.id, ownerId)
+
+        assertThrows<EntityNotFoundException> {
+            service.getLogById(log.id, otherUserId)
+        }
     }
 }

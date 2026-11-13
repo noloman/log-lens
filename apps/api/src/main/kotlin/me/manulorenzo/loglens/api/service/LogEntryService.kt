@@ -40,7 +40,7 @@ class LogEntryService(
         return entities.map(::toResponse)
     }
 
-    @Cacheable(value = ["logs"], key = "#id")
+    @Cacheable(value = ["logs"], key = "#userId.toString() + ':' + #id.toString()")
     @Transactional(readOnly = true)
     fun getLogById(id: UUID, userId: UUID): LogResponse {
         val entity =

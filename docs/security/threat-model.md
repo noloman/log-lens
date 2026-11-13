@@ -95,6 +95,7 @@ This document covers the **API module** (`apps/api`) of LogLens, focusing on aut
 | 1 | No rate limiting on auth endpoints | `RateLimitFilter` (Bucket4j) applies 100 req/min per IP to all endpoints including `/v1/auth/**` |
 | 10 | No rate limiting on `POST /logs` | Covered by the same global `RateLimitFilter` |
 | 6 | Default JWT secret fallback in `application.yml` | Removed the fallback; `JWT_SECRET` is required and placeholder values are rejected |
+| 8 | No tenant isolation on log entries | Log writes store the authenticated user ID; list, filter, single-entry, and cache lookups are scoped by that ID and covered by HTTP integration tests |
 
 ## Open Issues (Ordered by Priority)
 
@@ -103,7 +104,6 @@ This document covers the **API module** (`apps/api`) of LogLens, focusing on aut
 | 2 | Generic exception handler may leak internal details | Medium | Replace catch-all handler body with a static message |
 | 3 | No audit logging for auth events | Medium | Log login, register, refresh, and logout events with user ID |
 | 4 | Refresh tokens are not rotated on use | Medium | Issue a new refresh token on each `/auth/refresh` call and revoke the old one |
-| 8 | No tenant isolation on log entries | Medium | Filter `GET /logs` by the authenticated user's ID; add a `userId` column to `log_entries` |
 | 12 | No Redis authentication | Medium | Configure `requirepass` on Redis and set `spring.data.redis.password`; critical for non-private network deployments |
 | 13 | Redis `activateDefaultTyping(EVERYTHING)` deserialization risk | Medium | Restrict `BasicPolymorphicTypeValidator` to allow only `me.manulorenzo.loglens.api.dto` package instead of `Any::class.java` |
 | 14 | No Redis `maxmemory` or eviction policy | Medium | Configure `maxmemory` and `maxmemory-policy allkeys-lru` on Redis to prevent unbounded memory growth |

@@ -1,5 +1,6 @@
 package me.manulorenzo.loglens.api.error
 
+import jakarta.persistence.EntityNotFoundException
 import me.manulorenzo.loglens.api.config.IdempotencyFilter
 import me.manulorenzo.loglens.api.config.JwtAuthenticationFilter
 import me.manulorenzo.loglens.api.config.SecurityConfig
@@ -60,6 +61,16 @@ class GlobalExceptionHandlerTestIT(
             .andExpect(jsonPath("$.detail").value("Internal Server Error"))
             .andExpect(jsonPath("$.detail").value(not("database password is xyz")))
     }
+
+    @Test
+    fun `handleEntityNotFound returns sanitized not found problem detail`() {
+        mockMvc
+            .perform(get("/test/entity-not-found"))
+            .andExpect(status().isNotFound)
+            .andExpect(jsonPath("$.status").value(404))
+            .andExpect(jsonPath("$.detail").value("Not Found"))
+            .andExpect(jsonPath("$.detail").value(not("log entry belongs to another tenant")))
+    }
 }
 
 @RestController
@@ -72,5 +83,10 @@ class GlobalExceptionHandlerTestController {
     @GetMapping("/test/unexpected-error")
     fun unexpectedError() {
         throw RuntimeException("database password is xyz")
+    }
+
+    @GetMapping("/test/entity-not-found")
+    fun entityNotFound() {
+        throw EntityNotFoundException("log entry belongs to another tenant")
     }
 }
