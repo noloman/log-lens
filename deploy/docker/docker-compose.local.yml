@@ -2,14 +2,15 @@ services:
 
   api:
     container_name: loglens_api
-    platform: linux/amd64
     build:
       context: ../../
       dockerfile: apps/api/Dockerfile
     ports:
       - "8000:8080"
     environment:
-      DATABASE_URL: postgresql://loglens:loglens@db:5432/loglens
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/loglens
+      SPRING_DATASOURCE_USERNAME: loglens
+      SPRING_DATASOURCE_PASSWORD: loglens
       SPRING_DATA_REDIS_HOST: redis
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET to a local development value with at least 32 bytes}
     depends_on:
@@ -20,7 +21,6 @@ services:
 
   worker:
     container_name: loglens_worker
-    platform: linux/amd64
     build:
       context: ../../
       dockerfile: apps/worker/Dockerfile

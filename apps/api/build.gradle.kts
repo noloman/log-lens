@@ -27,6 +27,8 @@ dependencies {
     implementation(libs.bucket4j.core)
     runtimeOnly(libs.jjwt.impl)
     runtimeOnly(libs.jjwt.jackson)
+    implementation(libs.flyway.core)
+    runtimeOnly(libs.flyway.postgresql)
     runtimeOnly(libs.postgresql)
 
     testImplementation(libs.spring.boot.starter.test)

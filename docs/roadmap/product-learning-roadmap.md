@@ -46,7 +46,7 @@ Verified means the file/test exists in the repo; test bodies were not all re-rea
 
 **Correction to the old checklist:** the old plan ticked items that do not exist: `docs/perf/n-plus-one-*.txt`, Hibernate `batch_size=20` config, a transaction-rollback test, an optimistic-lock-conflict test, and a README JPA section beyond one paragraph. They are now open items in Phase 1.
 
-**Possible real-app problem (unverified, check first):** Compose passes `DATABASE_URL`, but `application.yml` has no datasource config, no migrations, and `ddl-auto: create` exists only in the test config. The ITs pass because they inject Testcontainers properties, so the app may not actually start against Compose Postgres.
+**Fixed 2026-11-13 (real-app startup):** the app did not start via Compose: Dockerfiles needed a host-built JAR, the Alpine Temurin images have no ARM build (the cause of the `linux/amd64` pin), `DATABASE_URL` was never read by Spring, and no schema existed outside tests. Now: multi-stage Dockerfiles, Flyway `V1__init.sql`, `ddl-auto: validate` everywhere, standard `SPRING_DATASOURCE_*` env vars. Verified: health 200, register 201, login 200 against Compose Postgres.
 
 ## What gets you hired (the filter for every decision)
 
@@ -72,7 +72,8 @@ Deliberately demoted: Kubernetes/EKS/Helm (see Parking Lot). They are useful but
 Goal: everything already built is committed, proven, and automated.
 
 - [ ] Commit tenant isolation + cache-key fix (explain in the commit why `#id` alone leaked across users)
-- [ ] **Make the real app run via Compose**: datasource config that matches the env vars, Flyway migrations replacing schema auto-generation, a smoke test that boots the stack
+- [x] Make the real app run via Compose (datasource config, Flyway migrations, multi-stage Dockerfiles)
+- [ ] Automated smoke test that boots the Compose stack (run it in CI)
 - [ ] GitHub Actions: build + unit + integration tests on every PR (Docker is available on runners)
 - [ ] Produce the missing evidence: `docs/perf/n-plus-one-before.txt` / `n-plus-one-after.txt` (Hibernate SQL/statistics output, with query counts)
 - [ ] Add `hibernate.jdbc.batch_size=20` and prove batching; add the missing transaction-rollback and optimistic-lock-conflict tests; README JPA section

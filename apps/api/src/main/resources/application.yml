@@ -1,6 +1,13 @@
 spring:
+  datasource:
+    # Overridden in containers via SPRING_DATASOURCE_URL / _USERNAME / _PASSWORD
+    url: jdbc:postgresql://localhost:5432/loglens
+    username: loglens
+    password: loglens
   jpa:
     show-sql: true
+    hibernate:
+      ddl-auto: validate
   output:
     ansi:
       enabled: ALWAYS
