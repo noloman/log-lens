@@ -1,7 +1,7 @@
 # LogLens
 
 ## What is LogLens?
-LogLens is a cloud-native, microservices-based log analysis backend that ingests logs, processes them asynchronously, and provides keyword + semantic search and AI-assisted analysis.
+LogLens is a cloud-native log analysis backend for ingesting, storing, and investigating application logs. Its current release provides authenticated log APIs, PostgreSQL persistence, and tenant-safe Redis caching; asynchronous processing, semantic search, and AI-assisted analysis are planned next.
 
 The project is intentionally built as a production-shaped backend system: each capability is implemented with clear architecture boundaries, focused tests, operational considerations, and documented tradeoffs.
 
@@ -27,6 +27,54 @@ The project follows a clean, layered architecture as defined in [ADR 0001](docs/
 - **Repository**: Manages data persistence using Spring Data JPA.
 
 This structure is enforced by **ArchUnit** tests to ensure architectural compliance and maintain clear boundaries between components. Our persistence strategy, detailed in [ADR 0002](docs/adr/0002-jpa-strategy.md), defaults to lazy loading and uses optimistic locking to manage concurrency.
+
+```mermaid
+flowchart LR
+    client["Client / integration"] -->|"HTTPS · JWT"| api["LogLens API\nSpring Boot"]
+    api --> security["Authentication & authorization"]
+    security --> service["Application services"]
+    service -->|"Read / write"| postgres[("PostgreSQL\nFlyway-managed schema")]
+    service -->|"Tenant-scoped cache"| redis[("Redis")]
+    api --> health["Health & actuator endpoints"]
+    worker["Worker\nhealth scaffold"]
+
+    subgraph compose["Local Docker Compose stack"]
+        api
+        postgres
+        redis
+        worker
+    end
+```
+
+### Tenant-safe log retrieval
+
+The API scopes every log lookup to the authenticated user. Cache entries use a combined `userId:logId` key, so a cached response for one tenant cannot be returned to another.
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant A as API
+    participant R as Redis
+    participant P as PostgreSQL
+
+    C->>A: GET /v1/logs/{id} + JWT
+    A->>A: Extract authenticated user ID
+    A->>R: Read key userId:logId
+    alt Cache hit
+        R-->>A: Cached log
+        A-->>C: 200 Log response
+    else Cache miss
+        A->>P: Find log by id AND userId
+        alt Owned by caller
+            P-->>A: Log entry
+            A->>R: Store key userId:logId
+            A-->>C: 200 Log response
+        else Missing or belongs to another tenant
+            P-->>A: No matching entry
+            A-->>C: 404 Not Found
+        end
+    end
+```
 
 ## Security Model
 LogLens uses **JWT access tokens + opaque refresh tokens** for stateless authentication, as described in [ADR 0003](docs/adr/0003-auth-strategy.md).
@@ -61,7 +109,7 @@ The full API contract is documented in the [OpenAPI specification](openapi.yaml)
 
 For our deprecation policy and version lifecycle, see [docs/api/deprecation-plan.md](docs/api/deprecation-plan.md).
 
-## Features
+## Current Capabilities
 - **Structured Log Ingestion**: `POST /v1/logs` accepts structured log entries (service name, level, message) and stores them in the `log_entries` table. `GET /v1/logs` retrieves entries with optional `?serviceName=` filtering.
 - **File-based Log Ingestion**: Upload entire log files that are chunked and stored atomically via `LogService`.
 - **N+1 Problem Demonstration & Solution**: The `LogService` includes both a naive (`getLogWithChunksNaive`) and an optimized (`getLogWithChunksOptimized`) method to demonstrate and solve the N+1 query problem.
@@ -70,11 +118,12 @@ For our deprecation policy and version lifecycle, see [docs/api/deprecation-plan
 ## Tech Stack
 - Kotlin + Spring Boot
 - **Persistence**: PostgreSQL with Spring Data JPA & Hibernate
+- **Cache**: Redis with tenant-scoped cache keys
 - **Testing**: JUnit 5, Mockito, Testcontainers, ArchUnit
-- (Planned) Kafka, Redis, AWS ECS/EKS, Terraform, pgvector, OpenTelemetry
+- **Planned**: Kafka, AWS ECS, Terraform, pgvector, OpenTelemetry
 
 ## Roadmap
-The product and engineering roadmap is tracked in [docs/roadmap/product-learning-roadmap.md](docs/roadmap/product-learning-roadmap.md). Use it as the source of truth for weekly deliverables, review checkpoints, quality gates, and suggested product improvements.
+The product roadmap is tracked in [docs/roadmap/product-roadmap.md](docs/roadmap/product-roadmap.md). It is the source of truth for releases, quality gates, operational readiness, and product improvements.
 
 ## Local Development
 ### Requirements
