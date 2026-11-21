@@ -14,7 +14,7 @@ This document covers the **API module** (`apps/api`) of LogLens, focusing on aut
 | Refresh tokens (UUID) | High | `refresh_tokens` table, client receives opaque UUID |
 | Log data (file uploads) | Medium | `logs` / `log_chunks` tables |
 | Log data (structured entries) | Medium | `log_entries` table |
-| Cached log responses | Medium | Redis (JSON-serialized `LogResponse` with type metadata) |
+| Cached log responses | Medium | Redis (JSON-serialized `LogResponse`, keyed by tenant and log ID) |
 
 ## Trust Boundaries
 
@@ -34,7 +34,7 @@ This document covers the **API module** (`apps/api`) of LogLens, focusing on aut
 
 **Boundary 1 — Internet to API**: All HTTP requests cross this boundary. The `RateLimitFilter` enforces per-IP rate limits (100 req/min) before requests reach the security filter chain.
 **Boundary 2 — API to Database**: JDBC over a private network. Parameterized queries via JPA prevent SQL injection.
-**Boundary 3 — API to Redis**: Lettuce client over a private network. Used for cache reads/writes (`@Cacheable`/`@CacheEvict`). No authentication configured by default.
+**Boundary 3 — API to Redis**: Lettuce client over the private Compose network. Used for cache reads/writes (`@Cacheable`/`@CacheEvict`) with an authenticated Redis connection.
 
 ## STRIDE Analysis
 
@@ -54,7 +54,7 @@ This document covers the **API module** (`apps/api`) of LogLens, focusing on aut
 | **T-2**: SQL injection through auth or log endpoints | Spring Data JPA uses parameterized queries exclusively (including `LogEntryRepository.findByServiceName`) | None for current query patterns |
 | **T-3**: Modify refresh token UUID to access another user's session | Refresh tokens are random UUIDs (122 bits of entropy), looked up by exact match | Negligible collision probability |
 | **T-4**: Inject malicious content via log entry fields (`serviceName`, `level`, `message`) | Fields are stored as plain strings via JPA parameterized inserts — no injection at the DB level | If log data is rendered in a UI without escaping, stored XSS is possible |
-| **T-5**: Poison Redis cache to serve tampered log entries | Redis is on a private network; no public access | No Redis authentication configured — an attacker with network access to the Redis instance can write arbitrary cache entries. `activateDefaultTyping(EVERYTHING)` in the serializer could enable deserialization attacks if the attacker can inject crafted type metadata |
+| **T-5**: Poison Redis cache to serve tampered log entries | Redis requires authentication, is not published to the host, and cached values deserialize only as `LogResponse` | An attacker with Redis credentials could still alter cached responses; credentials and network access must remain restricted |
 
 ### 3. Repudiation
 
@@ -67,7 +67,7 @@ This document covers the **API module** (`apps/api`) of LogLens, focusing on aut
 | Threat | Current Mitigation | Residual Risk |
 |---|---|---|
 | **I-1**: Credential leak via error responses | `GlobalExceptionHandler` returns generic messages; password hashes are never serialized | Generic `Exception` handler exposes `ex.message` which may leak internal details |
-| **I-4**: Unauthorized access to log entries via `GET /logs` or `GET /logs/{id}` | Endpoints require authentication (JWT); unauthenticated requests are rejected by the security filter chain | No tenant/ownership isolation — any authenticated user can read all log entries. Cached responses in Redis contain full `LogResponse` JSON including type metadata |
+| **I-4**: Unauthorized access to log entries via `GET /logs` or `GET /logs/{id}` | Endpoints require authentication; repository and cache keys are scoped by authenticated user ID | Cache entries are private to a Redis instance but still contain log content; Redis credentials and network access must remain restricted |
 | **I-2**: JWT secret exposure | Secret is injected via required environment variable, not hardcoded in production. `JwtService` rejects short and placeholder values | Secret exposure through deployment logs, shell history, or compromised runtime environment |
 | **I-3**: Timing attack on password comparison | BCrypt's `matches()` is constant-time by design | None |
 
@@ -79,7 +79,7 @@ This document covers the **API module** (`apps/api`) of LogLens, focusing on aut
 | **D-2**: Flood `/auth/login` with invalid credentials | BCrypt is intentionally slow, which amplifies CPU load under attack; `RateLimitFilter` limits to 100 req/min per IP | Rate limit is global (not auth-specific) — a stricter limit for auth endpoints would reduce exposure further |
 | **D-3**: Accumulate refresh tokens by repeated logins | No token-per-user limit | `refresh_tokens` table grows unbounded per user |
 | **D-4**: Flood `POST /logs` to fill the `log_entries` table | Endpoint requires authentication; `RateLimitFilter` limits to 100 req/min per IP | An authenticated user can still insert ~100 rows/min; no payload size limit |
-| **D-5**: Exhaust Redis memory with cache entries | TTL of 10 minutes auto-expires entries; `@CacheEvict(allEntries = true)` on writes clears the cache | No `maxmemory` policy configured on Redis — unbounded cache growth possible under high-cardinality reads. No eviction policy (e.g., `allkeys-lru`) configured |
+| **D-5**: Exhaust Redis memory with cache entries | TTL of 10 minutes, 256 MB `maxmemory`, and `allkeys-lru` eviction limit cache growth | Eviction lowers cache effectiveness under pressure but does not affect PostgreSQL as the source of truth |
 
 ### 6. Elevation of Privilege
 
@@ -96,6 +96,9 @@ This document covers the **API module** (`apps/api`) of LogLens, focusing on aut
 | 10 | No rate limiting on `POST /logs` | Covered by the same global `RateLimitFilter` |
 | 6 | Default JWT secret fallback in `application.yml` | Removed the fallback; `JWT_SECRET` is required and placeholder values are rejected |
 | 8 | No tenant isolation on log entries | Log writes store the authenticated user ID; list, filter, single-entry, and cache lookups are scoped by that ID and covered by HTTP integration tests |
+| 12 | No Redis authentication | Local Redis requires `REDIS_PASSWORD`; the API supplies it as `SPRING_DATA_REDIS_PASSWORD`, and Redis is not published to the host |
+| 13 | Redis polymorphic deserialization risk | The `logs` cache uses a concrete `Jackson2JsonRedisSerializer<LogResponse>` without default typing; undeclared caches cannot be created |
+| 14 | No Redis memory bound or eviction policy | Local Redis uses `maxmemory 256mb` and `maxmemory-policy allkeys-lru` |
 
 ## Open Issues (Ordered by Priority)
 
@@ -104,9 +107,6 @@ This document covers the **API module** (`apps/api`) of LogLens, focusing on aut
 | 2 | Generic exception handler may leak internal details | Medium | Replace catch-all handler body with a static message |
 | 3 | No audit logging for auth events | Medium | Log login, register, refresh, and logout events with user ID |
 | 4 | Refresh tokens are not rotated on use | Medium | Issue a new refresh token on each `/auth/refresh` call and revoke the old one |
-| 12 | No Redis authentication | Medium | Configure `requirepass` on Redis and set `spring.data.redis.password`; critical for non-private network deployments |
-| 13 | Redis `activateDefaultTyping(EVERYTHING)` deserialization risk | Medium | Restrict `BasicPolymorphicTypeValidator` to allow only `me.manulorenzo.loglens.api.dto` package instead of `Any::class.java` |
-| 14 | No Redis `maxmemory` or eviction policy | Medium | Configure `maxmemory` and `maxmemory-policy allkeys-lru` on Redis to prevent unbounded memory growth |
 | 15 | Rate limiting is per-IP, not per-user | Medium | Add user-based rate limiting (from JWT `sub` claim) for authenticated endpoints; IP-based limits are unfair for shared IPs and ineffective against distributed attacks |
 | 16 | Rate limiting is in-memory, not distributed | Medium | If running multiple API replicas, switch `ConcurrentHashMap` to Bucket4j's Redis proxy (`bucket4j_jdk17-lettuce`) so rate limits are shared across instances |
 | 5 | No per-user limit on active refresh tokens | Low | Cap active tokens per user and delete oldest on overflow |

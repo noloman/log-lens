@@ -1,9 +1,9 @@
 package me.manulorenzo.loglens.api.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import me.manulorenzo.loglens.api.dto.LogResponse
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.cache.CacheManager
 import org.springframework.cache.annotation.EnableCaching
@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.data.redis.cache.RedisCacheConfiguration
 import org.springframework.data.redis.cache.RedisCacheManager
 import org.springframework.data.redis.connection.RedisConnectionFactory
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer
 import org.springframework.data.redis.serializer.RedisSerializationContext.SerializationPair
 import java.time.Duration
 
@@ -25,26 +25,23 @@ class CacheConfig {
         val objectMapper = ObjectMapper()
             .registerModule(JavaTimeModule())
             .registerModule(KotlinModule.Builder().build())
-            .activateDefaultTyping(
-                BasicPolymorphicTypeValidator.builder()
-                    .allowIfBaseType(Any::class.java)
-                    .build(),
-                ObjectMapper.DefaultTyping.EVERYTHING,
-            )
 
-        val defaultConfig =
+        val logResponseSerializer = Jackson2JsonRedisSerializer(objectMapper, LogResponse::class.java)
+        val logCacheConfig =
             RedisCacheConfiguration
                 .defaultCacheConfig()
                 .entryTtl(Duration.ofMinutes(10))
+                .disableCachingNullValues()
                 .serializeValuesWith(
                     SerializationPair.fromSerializer(
-                        GenericJackson2JsonRedisSerializer(objectMapper),
+                        logResponseSerializer,
                     ),
                 )
 
         return RedisCacheManager
             .builder(connectionFactory)
-            .cacheDefaults(defaultConfig)
+            .withCacheConfiguration("logs", logCacheConfig)
+            .disableCreateOnMissingCache()
             .build()
     }
 }

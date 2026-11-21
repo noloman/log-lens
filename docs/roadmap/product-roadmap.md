@@ -88,7 +88,7 @@ Goal: a new contributor can start, test, and understand the current API without 
 - [x] Make the real app run via Compose (datasource config, Flyway migrations, multi-stage Dockerfiles)
 - [ ] Automated smoke test that boots the Compose stack (run it in CI)
 - [ ] GitHub Actions: build + unit + integration tests on every PR (Docker is available on runners)
-- [ ] Close threat-model items 12-14 (Redis password, restrict polymorphic typing, maxmemory + LRU)
+- [x] Close threat-model items 12-14 (Redis password, concrete DTO cache serializer, maxmemory + LRU)
 - [ ] README: architecture v1, exact run/test instructions, security model, and one honest limitations section
 - [ ] Postman/Bruno collection or curl examples under `docs/api/`
 

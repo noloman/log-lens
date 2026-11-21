@@ -12,6 +12,7 @@ services:
       SPRING_DATASOURCE_USERNAME: loglens
       SPRING_DATASOURCE_PASSWORD: loglens
       SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD:?Set REDIS_PASSWORD to a local development value}
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET to a local development value with at least 32 bytes}
     depends_on:
       db:
@@ -53,10 +54,18 @@ services:
   redis:
     container_name: loglens_redis
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Set REDIS_PASSWORD to a local development value}
+    command:
+      - redis-server
+      - --requirepass
+      - ${REDIS_PASSWORD:?Set REDIS_PASSWORD to a local development value}
+      - --maxmemory
+      - 256mb
+      - --maxmemory-policy
+      - allkeys-lru
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping"]
       interval: 10s
       timeout: 5s
       retries: 5

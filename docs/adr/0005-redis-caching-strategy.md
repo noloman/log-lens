@@ -23,7 +23,7 @@ Use Redis as the caching backend via `spring-boot-starter-data-redis` and Spring
 
 | Endpoint | Cache Name | Key | TTL |
 |---|---|---|---|
-| `GET /v1/logs/{id}` | `logs` | `logs::{id}` | 10 minutes |
+| `GET /v1/logs/{id}` | `logs` | `logs::{userId}:{id}` | 10 minutes |
 
 The list endpoint (`GET /v1/logs`) is **not cached** initially — it supports filtering and pagination, making cache key cardinality high and hit rates low.
 
@@ -34,13 +34,13 @@ The list endpoint (`GET /v1/logs`) is **not cached** initially — it supports f
 - TTL provides a safety net: even without explicit eviction, stale entries expire after 10 minutes
 
 ### 4. Serialization
-Cache values are serialized as JSON using `GenericJackson2JsonRedisSerializer` with a custom `ObjectMapper`. This keeps cached data human-readable and debuggable via `redis-cli`.
+The `logs` cache stores JSON using `Jackson2JsonRedisSerializer<LogResponse>` with a custom `ObjectMapper`. This keeps cached data human-readable and debuggable via `redis-cli` while binding every value to the one DTO the cache is allowed to hold.
 
 The custom `ObjectMapper` registers three critical modules:
 
 - **`JavaTimeModule`** — required to serialize `java.time.Instant` (`LogResponse.timestamp`). Without it, Jackson throws `java.time.Instant not supported by default`.
 - **`KotlinModule`** — required to *deserialize* Kotlin data classes. Data classes have no no-arg constructor; `KotlinModule` teaches Jackson to call the primary constructor with named parameters. Without it, deserialization fails with "no Creators exist."
-- **`activateDefaultTyping(EVERYTHING)`** — writes type information into the JSON (e.g., `["me.manulorenzo.loglens.api.dto.LogResponse", {...}]`). Without it, `GenericJackson2JsonRedisSerializer` cannot determine the target class on deserialization and returns a `LinkedHashMap` instead of a typed object.
+- **No default typing** — the cache uses a concrete `LogResponse` serializer, so untrusted Redis data cannot select an arbitrary Java/Kotlin type during deserialization. Cache creation is disabled for undeclared names; any future cache must declare its value serializer explicitly.
 
 This `ObjectMapper` is separate from Spring Boot's auto-configured one — Spring's global `ObjectMapper` is only used for HTTP serialization, not for Redis cache serialization.
 
@@ -50,9 +50,9 @@ This `ObjectMapper` is separate from Spring Boot's auto-configured one — Sprin
 This was chosen over `@ConditionalOnBean(RedisConnectionFactory::class)` because of a Spring bean ordering issue: `@ConditionalOnBean` evaluates before auto-configuration runs, so it would always see "no bean" and never activate. Property-based conditions evaluate immediately with no ordering dependency.
 
 ### 6. Infrastructure
-- **Local dev**: Redis 7 Alpine container in `docker-compose.local.yml` with healthcheck (`redis-cli ping`). The API container receives `SPRING_DATA_REDIS_HOST: redis` via environment and `depends_on` with `condition: service_healthy`.
-- **Tests**: Redis and Cache auto-configuration are excluded globally in `src/test/resources/application.yml` to prevent non-cache tests from requiring a Redis connection. Cache-specific tests (`LogServiceCacheIT`) opt back in via `@SpringBootTest(properties = ["spring.autoconfigure.exclude="])` and provide a Redis container through Testcontainers `GenericContainer("redis:7-alpine")` with `@DynamicPropertySource`.
-- **Production**: Managed Redis (e.g., ElastiCache, Cloud Memorystore) — configured via `SPRING_DATA_REDIS_HOST` environment variable.
+- **Local dev**: Redis 7 Alpine container in `docker-compose.local.yml` requires `REDIS_PASSWORD`, is available only on the Compose network, and uses a 256 MB `allkeys-lru` memory policy. The API receives the host and password through Spring environment variables and waits for an authenticated healthcheck.
+- **Tests**: Redis and Cache auto-configuration are excluded globally in `src/test/resources/application.yml` to prevent non-cache tests from requiring a Redis connection. Cache-specific tests (`LogServiceCacheIT`) opt back in via `@SpringBootTest(properties = ["spring.autoconfigure.exclude="])` and provide a password-protected Redis Testcontainer through `@DynamicPropertySource`.
+- **Production**: Managed Redis (e.g., ElastiCache, Cloud Memorystore) — configured via `SPRING_DATA_REDIS_HOST` and `SPRING_DATA_REDIS_PASSWORD` environment variables, with network access restricted to application workloads.
 
 ### 7. Configuration
 ```yaml
@@ -61,9 +61,10 @@ spring:
     redis:
       host: ${SPRING_DATA_REDIS_HOST:localhost}
       port: 6379
+      password: ${SPRING_DATA_REDIS_PASSWORD:}
 ```
 
-Per-cache TTL is configured programmatically in `CacheConfig` via `RedisCacheManager.builder()` with `cacheDefaults()`, not via global properties, to allow different TTLs per cache name in the future.
+The `logs` cache TTL and concrete serializer are configured programmatically in `CacheConfig`. New cache names must be explicitly configured rather than inheriting a generic serializer.
 
 ## Consequences
 
@@ -77,6 +78,6 @@ Per-cache TTL is configured programmatically in `CacheConfig` via `RedisCacheMan
 ### Trade-offs
 - **New dependency**: Redis must be available in all environments where caching is enabled (dev, test, prod)
 - **Cache consistency**: there is a brief window (up to TTL) where a cache entry could be stale if eviction fails or a write bypasses the service layer
-- **Serialization cost**: JSON serialization/deserialization adds minor overhead per cache miss; the custom `ObjectMapper` with type info increases payload size slightly
+- **Serialization cost**: JSON serialization/deserialization adds minor overhead per cache miss
 - **Test isolation**: the auto-config exclusion pattern adds complexity — every new `@SpringBootTest` that needs Redis must explicitly opt back in
 - **Monitoring**: need to track cache hit/miss rates via Actuator or Redis `INFO` stats to validate the strategy is effective

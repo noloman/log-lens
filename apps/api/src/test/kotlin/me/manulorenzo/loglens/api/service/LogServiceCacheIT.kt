@@ -8,6 +8,7 @@ import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.cache.CacheManager
+import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.testcontainers.containers.GenericContainer
@@ -25,6 +26,8 @@ import java.util.UUID
 @Testcontainers
 class LogServiceCacheIT {
     companion object {
+        private const val redisPassword = "cache-test-password"
+
         @Container
         @JvmStatic
         val postgresContainer = PostgreSQLContainer("postgres:16-alpine")
@@ -32,6 +35,7 @@ class LogServiceCacheIT {
         @Container
         @JvmStatic
         val redis = GenericContainer("redis:7-alpine")
+            .withCommand("redis-server", "--requirepass", redisPassword)
             .withExposedPorts(6379)
 
         @DynamicPropertySource
@@ -42,6 +46,7 @@ class LogServiceCacheIT {
             registry.add("spring.datasource.password", postgresContainer::getPassword)
             registry.add("spring.data.redis.host") { redis.host }
             registry.add("spring.data.redis.port") { redis.firstMappedPort }
+            registry.add("spring.data.redis.password") { redisPassword }
         }
     }
 
@@ -50,6 +55,9 @@ class LogServiceCacheIT {
 
     @Autowired
     lateinit var cacheManager: CacheManager
+
+    @Autowired
+    lateinit var redisTemplate: StringRedisTemplate
 
     @Test
     fun `getLogById returns cached result on second call`() {
@@ -60,6 +68,9 @@ class LogServiceCacheIT {
 
         val cache = cacheManager.getCache("logs")!!
         assertThat(cache.get("$userId:${log.id}")).isNotNull
+        assertThat(redisTemplate.opsForValue().get("logs::$userId:${log.id}"))
+            .contains("\"serviceName\"")
+            .doesNotContain("@class")
 
         service.getLogById(log.id, userId) // should hit cache, not DB
     }
